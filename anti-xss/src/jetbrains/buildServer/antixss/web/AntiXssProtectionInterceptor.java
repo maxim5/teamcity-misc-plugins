@@ -4,8 +4,10 @@
  */
 package jetbrains.buildServer.antixss.web;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import jetbrains.buildServer.antixss.AntiXssOptions;
@@ -40,7 +42,7 @@ public class AntiXssProtectionInterceptor extends HandlerInterceptorAdapter {
     try {
       checkForJsInjection(request);
     } catch (XssDetectedException e) {
-      handleDeny(response);
+      handleDeny(response, e.getMessage());
       return false;
     }
 
@@ -105,9 +107,17 @@ public class AntiXssProtectionInterceptor extends HandlerInterceptorAdapter {
     return builder.toString();
   }
 
-  private static void handleDeny(HttpServletResponse response) {
-    // TODO: redirect to our page.
-    // response.sendRedirect(request.getContextPath() + "/showAgreement.html");
-    response.setStatus(401);
+  private static void handleDeny(@NotNull HttpServletResponse response,
+                                 @NotNull String message) throws IOException {
+    response.setStatus(403);
+    ServletOutputStream output = response.getOutputStream();
+    try {
+      output.print("<!DOCTYPE html><html>" +
+                     "<head><title>Forbidden</title></head>" +
+                     "<body><h1>HTTP 403 Forbidden. " + message + "</h1></body>" +
+                   "</html>");
+    } finally {
+      output.close();
+    }
   }
 }
