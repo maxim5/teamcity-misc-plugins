@@ -4,7 +4,7 @@
   <info>
     <name>dataDir</name>
     <display-name>Data Directory</display-name>
-    <version>@version@</version>
+    <version>1.0</version>
     <description>Allows to browse and edit TeamCity data directory files through web UI</description>
 
     <vendor>
