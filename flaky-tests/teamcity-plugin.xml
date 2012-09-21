@@ -2,10 +2,10 @@
 <teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:noNamespaceSchemaLocation="urn:shemas-jetbrains-com:teamcity-plugin-v1-xml">
   <info>
-    <name>Anti-xss</name>
-    <display-name>Anti XSS</display-name>
+    <name>flakyTests</name>
+    <display-name>Flaky tests</display-name>
     <version>1.0</version>
-    <description>Provides a protection against javascript injection and XSS</description>
+    <description>Finds and analyses flaky (flickering) tests</description>
 
     <vendor>
       <name>JetBrains, s.r.o.</name>

@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 /**
+ * See TW-21070.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
