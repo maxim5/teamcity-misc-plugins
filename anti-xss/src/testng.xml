@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Anti XSS tests">
+  <test name="AntiXssOptionsTest">
+    <classes>
+      <class name="jetbrains.buildServer.antixss.AntiXssUtilTest"/>
+    </classes>
+  </test>
+</suite>
