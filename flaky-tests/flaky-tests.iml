@@ -12,6 +12,8 @@
     <orderEntry type="module" module-name="server-openapi" />
     <orderEntry type="module" module-name="web-openapi" />
     <orderEntry type="module" module-name="web" />
+    <orderEntry type="module" module-name="server" />
+    <orderEntry type="library" name="EhCache" level="project" />
   </component>
 </module>
 

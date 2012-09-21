@@ -3,5 +3,8 @@
 
 <!--suppress SpringFacetInspection -->
 <beans default-autowire="constructor">
-  <bean class="jetbrains.buildServer.serverSide.flaky.FlakyTestsTab"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.FlakyTestsHolder"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.FlakyTestsFinder"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.web.FlakyTestsTab"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.web.FindFlakyTestsController"/>
 </beans>
