@@ -43,6 +43,12 @@ public class FlakyTestData implements Serializable {
     this(test.getTestNameId(), test.getProjectId());
   }
 
+  public FlakyTestData(@NotNull STest test,
+                       @NotNull Map<String, FailureRate> buildTypeFailureRates,
+                       @NotNull Map<String, FailureRate> agentFailureRates) {
+    this(test.getTestNameId(), test.getProjectId(), buildTypeFailureRates, agentFailureRates);
+  }
+
   public long getTestId() {
     return myTestId;
   }
@@ -64,28 +70,6 @@ public class FlakyTestData implements Serializable {
   @NotNull
   public Map<String, FailureRate> getAgentFailureRates() {
     return myAgentFailureRates;
-  }
-
-  public static class FailureRate implements Serializable {
-    private final int myTotalRuns;
-    private final int myFailures;
-
-    public FailureRate(int totalRuns, int failures) {
-      myTotalRuns = totalRuns;
-      myFailures = failures;
-    }
-
-    public int getTotalRuns() {
-      return myTotalRuns;
-    }
-
-    public int getFailures() {
-      return myFailures;
-    }
-
-    public boolean isAllFailures() {
-      return myTotalRuns == myFailures;
-    }
   }
 
   private static boolean calculareAlwaysFailing(@NotNull Collection<FailureRate> failureRates) {
