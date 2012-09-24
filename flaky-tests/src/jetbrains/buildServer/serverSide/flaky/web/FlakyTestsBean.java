@@ -87,7 +87,7 @@ public class FlakyTestsBean {
         continue;
       }
       STestRun testRun = myProblemsManager.findProblemRunForTest(myProject, testName, true);
-      if (testRun != null) {
+      if (testRun == null) {
         TestEx test = (TestEx) myTestManager.findTest(testId, myProject.getProjectId());
         testRun = new DummyTestRunImpl(test);
       }
