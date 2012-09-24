@@ -11,8 +11,8 @@ import jetbrains.buildServer.serverSide.CurrentProblemsManager;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.STestManager;
-import jetbrains.buildServer.serverSide.flaky.data.FlakyTests;
 import jetbrains.buildServer.serverSide.flaky.FlakyTestsHolder;
+import jetbrains.buildServer.serverSide.flaky.data.FlakyTests;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.web.openapi.PagePlaces;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -45,7 +45,12 @@ public class FlakyTestsTab extends ProjectTab {
     myProblemsManager = problemsManager;
     myTestManager = testManager;
     myHolder = holder;
+
     setPosition(PositionConstraint.after("mutedProblems"));
+    addCssFile("/css/viewModification.css");
+    addJsFile("/js/bs/blocksWithHeader.js");
+    addJsFile("/js/bs/buildResultsDiv.js");
+    addJsFile("/js/bs/testDetails.js");
   }
 
   @Override
