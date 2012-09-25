@@ -29,7 +29,14 @@
             run only in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/> build configuration
           </c:when>
           <c:otherwise>
-            fails in ${details.failedInBuildTypes} (run in ${fn:length(details.testData.buildTypeFailureRates)} build types)
+            fails in
+            <bs:changeRequest key="buildTypes" value="${details.failedInBuildTypes}">
+              <jsp:include page="buildTypes.jsp"/>
+            </bs:changeRequest>
+
+            <bs:changeRequest key="buildTypes" value="${details.allBuildTypes}">
+              (run in <jsp:include page="buildTypes.jsp"/>)
+            </bs:changeRequest>
           </c:otherwise>
         </c:choose>
       </td>

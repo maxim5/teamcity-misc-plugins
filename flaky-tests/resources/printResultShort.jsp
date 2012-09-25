@@ -1,7 +1,7 @@
-<jsp:useBean id="testAnalysisResult" type="jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResult" scope="request"
-
-/>
+<%@ include file="/include.jsp"
+%><jsp:useBean id="bean" type="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisBean" scope="request"
+/><c:set var="testAnalysisResult" value="${bean.testAnalysisResult}" />
 <div>
-  Start time: ${testAnalysisResult.startDate},
-  Finish time: ${testAnalysisResult.finishDate}.
+  Last test analysis performed <b><bs:elapsedTime time="${testAnalysisResult.startDate}"/></b> (duration: ${bean.testAnalysisDuration}).
+  Total tests analysed: <b>${testAnalysisResult.totalTests}</b>
 </div>
