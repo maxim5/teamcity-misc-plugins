@@ -4,17 +4,13 @@
  */
 package jetbrains.buildServer.serverSide.flaky.web;
 
-import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.serverSide.SProject;
-import jetbrains.buildServer.serverSide.flaky.FlakyTestsHolder;
-import jetbrains.buildServer.serverSide.flaky.data.FlakyTestData;
-import jetbrains.buildServer.serverSide.flaky.data.FlakyTests;
-import jetbrains.buildServer.serverSide.flaky.finder.FlakyTestsFinder;
+import jetbrains.buildServer.serverSide.flaky.finder.TestsAnalyser;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,21 +20,18 @@ import org.springframework.web.servlet.ModelAndView;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class FindFlakyTestsController extends BaseController {
+public class RunTestsAnalysisController extends BaseController {
   private final ProjectManager myProjectManager;
-  private final FlakyTestsFinder myFinder;
-  private final FlakyTestsHolder myHolder;
+  private final TestsAnalyser myAnalyser;
 
-  public FindFlakyTestsController(@NotNull SBuildServer server,
-                                  @NotNull WebControllerManager webControllerManager,
-                                  @NotNull ProjectManager projectManager,
-                                  @NotNull FlakyTestsFinder finder,
-                                  @NotNull FlakyTestsHolder holder) {
+  public RunTestsAnalysisController(@NotNull SBuildServer server,
+                                    @NotNull WebControllerManager webControllerManager,
+                                    @NotNull ProjectManager projectManager,
+                                    @NotNull TestsAnalyser analyser) {
     super(server);
-    myHolder = holder;
-    webControllerManager.registerController("/findFlaky.html", this);
+    webControllerManager.registerController("/analyzeTests.html", this);
     myProjectManager = projectManager;
-    myFinder = finder;
+    myAnalyser = analyser;
   }
 
   @Nullable
@@ -55,9 +48,7 @@ public class FindFlakyTestsController extends BaseController {
       return null;
     }
 
-    List<FlakyTestData> flakyTestsData = myFinder.getFlakyTests(project);
-    FlakyTests flakyTests = new FlakyTests(flakyTestsData);
-    myHolder.putFlakyTestsFor(project, flakyTests);
+    myAnalyser.analyseTestsInProject(project);
 
     return null;
   }

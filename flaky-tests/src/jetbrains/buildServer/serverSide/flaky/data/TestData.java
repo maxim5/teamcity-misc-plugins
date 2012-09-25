@@ -15,17 +15,17 @@ import org.jetbrains.annotations.NotNull;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class FlakyTestData implements Serializable {
+public class TestData implements Serializable {
   private final long myTestId;
   private final String myProjectId;
   private final boolean myAlwaysFailing;
   private final Map<String, FailureRate> myBuildTypeFailureRates;
   private final Map<String, FailureRate> myAgentFailureRates;
 
-  public FlakyTestData(long testId,
-                       @NotNull String projectId,
-                       @NotNull Map<String, FailureRate> buildTypeFailureRates,
-                       @NotNull Map<String, FailureRate> agentFailureRates) {
+  public TestData(long testId,
+                  @NotNull String projectId,
+                  @NotNull Map<String, FailureRate> buildTypeFailureRates,
+                  @NotNull Map<String, FailureRate> agentFailureRates) {
     myProjectId = projectId;
     myTestId = testId;
     myBuildTypeFailureRates = buildTypeFailureRates;
@@ -33,19 +33,19 @@ public class FlakyTestData implements Serializable {
     myAlwaysFailing = calculareAlwaysFailing(buildTypeFailureRates.values());
   }
 
-  public FlakyTestData(long testId, @NotNull String projectId) {
+  public TestData(long testId, @NotNull String projectId) {
     this(testId, projectId,
          Collections.<String, FailureRate>emptyMap(),
          Collections.<String, FailureRate>emptyMap());
   }
 
-  public FlakyTestData(@NotNull STest test) {
+  public TestData(@NotNull STest test) {
     this(test.getTestNameId(), test.getProjectId());
   }
 
-  public FlakyTestData(@NotNull STest test,
-                       @NotNull Map<String, FailureRate> buildTypeFailureRates,
-                       @NotNull Map<String, FailureRate> agentFailureRates) {
+  public TestData(@NotNull STest test,
+                  @NotNull Map<String, FailureRate> buildTypeFailureRates,
+                  @NotNull Map<String, FailureRate> agentFailureRates) {
     this(test.getTestNameId(), test.getProjectId(), buildTypeFailureRates, agentFailureRates);
   }
 

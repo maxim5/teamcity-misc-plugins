@@ -11,8 +11,8 @@ import jetbrains.buildServer.serverSide.CurrentProblemsManager;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.STestManager;
-import jetbrains.buildServer.serverSide.flaky.FlakyTestsHolder;
-import jetbrains.buildServer.serverSide.flaky.data.FlakyTests;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.web.openapi.PagePlaces;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -25,28 +25,32 @@ import org.jetbrains.annotations.Nullable;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class FlakyTestsTab extends ProjectTab {
+public class TestsAnalysisTab extends ProjectTab {
   private final InvestigationTestRunsHolder myTestRunsHolder;
   private final CurrentProblemsManager myProblemsManager;
   private final STestManager myTestManager;
 
-  private final FlakyTestsHolder myHolder;
+  private final TestAnalysisProgress myProgress;
+  private final TestAnalysisResultHolder myHolder;
 
-  public FlakyTestsTab(@NotNull PagePlaces pagePlaces,
-                       @NotNull ProjectManager projectManager,
-                       @NotNull PluginDescriptor descriptor,
-                       @NotNull InvestigationTestRunsHolder testRunsHolder,
-                       @NotNull CurrentProblemsManager problemsManager,
-                       @NotNull STestManager testManager,
-                       @NotNull FlakyTestsHolder holder) {
-    super("flaky", "Flaky tests", pagePlaces, projectManager, descriptor.getPluginResourcesPath("/flaky.jsp"));
+  public TestsAnalysisTab(@NotNull PagePlaces pagePlaces,
+                          @NotNull ProjectManager projectManager,
+                          @NotNull PluginDescriptor descriptor,
+                          @NotNull InvestigationTestRunsHolder testRunsHolder,
+                          @NotNull CurrentProblemsManager problemsManager,
+                          @NotNull STestManager testManager,
+                          @NotNull TestAnalysisProgress progress,
+                          @NotNull TestAnalysisResultHolder holder) {
+    super("analysis", "Tests analysis", pagePlaces, projectManager,
+          descriptor.getPluginResourcesPath("/analysis.jsp"));
     myTestRunsHolder = testRunsHolder;
     myProblemsManager = problemsManager;
     myTestManager = testManager;
+    myProgress = progress;
     myHolder = holder;
 
     setPosition(PositionConstraint.after("mutedProblems"));
-    addCssFile(descriptor.getPluginResourcesPath("/flaky.css"));
+    addCssFile(descriptor.getPluginResourcesPath("/analysis.css"));
     addCssFile("/css/viewModification.css");
     addJsFile("/js/bs/blocksWithHeader.js");
     addJsFile("/js/bs/buildResultsDiv.js");
@@ -58,9 +62,9 @@ public class FlakyTestsTab extends ProjectTab {
                            @NotNull HttpServletRequest request,
                            @NotNull SProject project,
                            @Nullable SUser user) {
-    FlakyTests flakyTests = myHolder.getFlakyTestsFor(project);
-    FlakyTestsBean bean = new FlakyTestsBean(myTestRunsHolder, myProblemsManager, myTestManager, getProjectManager(),
-                                             project, flakyTests);
+    TestsAnalysisBean bean = new TestsAnalysisBean(myTestRunsHolder, myProblemsManager,
+                                                   myTestManager, getProjectManager(),
+                                                   myProgress, myHolder, project);
     model.put("bean", bean);
   }
 }

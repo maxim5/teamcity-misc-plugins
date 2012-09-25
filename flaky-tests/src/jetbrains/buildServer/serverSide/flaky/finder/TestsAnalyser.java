@@ -6,10 +6,7 @@ package jetbrains.buildServer.serverSide.flaky.finder;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.SQLRunner;
@@ -19,71 +16,94 @@ import jetbrains.buildServer.serverSide.db.DBException;
 import jetbrains.buildServer.serverSide.db.DBFunctions;
 import jetbrains.buildServer.serverSide.db.SQLRunnerEx;
 import jetbrains.buildServer.serverSide.db.queries.GenericQuery;
-import jetbrains.buildServer.serverSide.flaky.data.FailureRate;
-import jetbrains.buildServer.serverSide.flaky.data.FlakyTestData;
+import jetbrains.buildServer.serverSide.flaky.data.*;
 import jetbrains.buildServer.serverSide.stat.TestFailureRate;
 import jetbrains.buildServer.serverSide.stat.TestFailuresStatistics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * TODO: possible problems with ReSharper (16`000 flaky tests?)
- *       problems with storage?
- *       use object pool
+ * TODO: performance, possible problems with ReSharper (16`000 flaky tests?), use object pool
  *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class FlakyTestsFinder {
+public class TestsAnalyser {
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
   private final List<FinderAlgorithm> myAlgorithms;
 
-  public FlakyTestsFinder(@NotNull TestFailuresStatistics failuresStatistics,
-                          @NotNull SQLRunner sqlRunner) {
+  private final TestAnalysisProgress myProgress;
+  private final TestAnalysisResultHolder myHolder;
+
+  public TestsAnalyser(@NotNull TestFailuresStatistics failuresStatistics,
+                       @NotNull SQLRunner sqlRunner,
+                       @NotNull TestAnalysisProgress progress,
+                       @NotNull TestAnalysisResultHolder holder) {
     myFailuresStatistics = failuresStatistics;
     mySQLRunner = sqlRunner;
+    myProgress = progress;
+    myHolder = holder;
 
     myAlgorithms = new ArrayList<FinderAlgorithm>();
     myAlgorithms.add(new SimpleStatusAlgorithm());
     myAlgorithms.add(new ModificationBasedAlgorithm());
   }
 
-  @NotNull
-  public List<FlakyTestData> getFlakyTests(@NotNull SProject project) {
-    List<TestFailureRate> allFailingTests = myFailuresStatistics.getFailingTests(project, 0.01f);
-    List<RawData> buffer = new ArrayList<RawData>(1024);    // reuse the allocated buffer
-    List<FlakyTestData> result = new ArrayList<FlakyTestData>();
-    algorithmsOnStart();
-    long start = System.currentTimeMillis();
-
-    try {
-      for (TestFailureRate testFailureRate : allFailingTests) {
-        STest test = testFailureRate.getTest();
-        int failureCount = testFailureRate.getFailureCount();
-        int successCount = testFailureRate.getSuccessCount();
-        int totalCount = failureCount + successCount;
-
-        if (failureCount > 0 && successCount == 0) {
-          result.add(new FlakyTestData(test));
-        } else if (totalCount > 1) {
-          FlakyTestData flakyTestData = getFlakyTestData(test, buffer);
-          if (flakyTestData != null) {
-            result.add(flakyTestData);
-          }
-        }
-      }
-    } finally {
-      algorithmsOnFinish();
-      long finish = System.currentTimeMillis();
-      System.out.println("Done in " + (finish - start) / 1000 + " seconds");
+  public void analyseTestsInProject(@NotNull SProject project) {
+    if (!myProgress.getLock().compareAndSet(false, true)) {
+      return;
     }
 
-    return result;
+    try {
+      // Starting...
+      myProgress.start("Starting...");
+      TestAnalysisResult result = new TestAnalysisResult();
+      result.setStartDate(new Date());
+
+      // Preparing data...
+      myProgress.setCurrentStep("Preparing data...");
+      List<TestData> testDataList = new ArrayList<TestData>();
+      algorithmsOnStart();
+
+      try {
+        List<RawData> buffer = new ArrayList<RawData>(1024);    // reuse the allocated buffer
+
+        // Collecting failure statistics...
+        List<TestFailureRate> allFailingTests = myFailuresStatistics.getFailingTests(project, 0.01f);
+        myProgress.setTotalSize(allFailingTests.size());
+
+        // Analysis...
+        myProgress.setCurrentStep("Analysing tests failures...");
+        for (TestFailureRate testFailureRate : allFailingTests) {
+          STest test = testFailureRate.getTest();
+          int failureCount = testFailureRate.getFailureCount();
+          int successCount = testFailureRate.getSuccessCount();
+          int totalCount = failureCount + successCount;
+
+          if (failureCount > 0 && successCount == 0) {
+            testDataList.add(new TestData(test));
+          } else if (totalCount > 1) {
+            TestData testData = getFlakyTestData(test, buffer);
+            if (testData != null) {
+              testDataList.add(testData);
+            }
+          }
+          myProgress.incDoneSize();
+        }
+      } finally {
+        algorithmsOnFinish();
+        result.setFinishDate(new Date());
+        result.setTests(testDataList);
+        myHolder.putFlakyTestsFor(project, result);
+      }
+    } finally {
+      myProgress.getLock().set(false);
+    }
   }
 
   @Nullable
-  private FlakyTestData getFlakyTestData(@NotNull STest test, @NotNull final List<RawData> buffer) {
+  private TestData getFlakyTestData(@NotNull STest test, @NotNull final List<RawData> buffer) {
     final long testId = test.getTestNameId();
     final long buildId = 0;
     buffer.clear();
@@ -128,11 +148,11 @@ public class FlakyTestsFinder {
   }
 
   @Nullable
-  private FlakyTestData runAlgorithms(@NotNull STest test, @NotNull List<RawData> data) {
+  private TestData runAlgorithms(@NotNull STest test, @NotNull List<RawData> data) {
     for (FinderAlgorithm algorithm : myAlgorithms) {
       Boolean checkResult = algorithm.checkTest(test, data);
       if (checkResult != null) {
-        return checkResult ? buildFlakyTestData(test, data) : null;
+        return checkResult ? buildTestData(test, data) : null;
       }
     }
     return null;    // we're not sure about this test.
@@ -145,7 +165,7 @@ public class FlakyTestsFinder {
   }
 
   @NotNull
-  private FlakyTestData buildFlakyTestData(@NotNull STest test, @NotNull List<RawData> data) {
+  private TestData buildTestData(@NotNull STest test, @NotNull List<RawData> data) {
     FailureRate failureRate;
     Map<String, FailureRate> buildTypeFailureRates = new HashMap<String, FailureRate>();
     Map<String, FailureRate> agentFailureRates = new HashMap<String, FailureRate>();
@@ -175,7 +195,7 @@ public class FlakyTestsFinder {
       }
     }
 
-    return new FlakyTestData(test, buildTypeFailureRates, agentFailureRates);
+    return new TestData(test, buildTypeFailureRates, agentFailureRates);
   }
 
   private static final String GET_TEST_DATA_SQL =
