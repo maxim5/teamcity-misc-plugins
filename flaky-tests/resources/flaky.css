@@ -1,0 +1,11 @@
+.testFailedInPart {
+  display: none;
+}
+
+.flaky-details {
+  width: 50%;
+}
+
+.action-bar .flaky-details {
+  padding-left: 0.8em;
+}
