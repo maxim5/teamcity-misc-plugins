@@ -33,20 +33,20 @@ public class FlakyTestsTab extends ProjectTab {
   private final FlakyTestsHolder myHolder;
 
   public FlakyTestsTab(@NotNull PagePlaces pagePlaces,
-                          @NotNull ProjectManager projectManager,
-                          @NotNull PluginDescriptor descriptor,
-                          @NotNull InvestigationTestRunsHolder testRunsHolder,
-                          @NotNull CurrentProblemsManager problemsManager,
-                          @NotNull STestManager testManager,
-                          @NotNull FlakyTestsHolder holder) {
-    super("flaky", "Flaky tests", pagePlaces, projectManager,
-          descriptor.getPluginResourcesPath("/project/flaky.jsp"));
+                       @NotNull ProjectManager projectManager,
+                       @NotNull PluginDescriptor descriptor,
+                       @NotNull InvestigationTestRunsHolder testRunsHolder,
+                       @NotNull CurrentProblemsManager problemsManager,
+                       @NotNull STestManager testManager,
+                       @NotNull FlakyTestsHolder holder) {
+    super("flaky", "Flaky tests", pagePlaces, projectManager, descriptor.getPluginResourcesPath("/flaky.jsp"));
     myTestRunsHolder = testRunsHolder;
     myProblemsManager = problemsManager;
     myTestManager = testManager;
     myHolder = holder;
 
     setPosition(PositionConstraint.after("mutedProblems"));
+    addCssFile(descriptor.getPluginResourcesPath("/flaky.css"));
     addCssFile("/css/viewModification.css");
     addJsFile("/js/bs/blocksWithHeader.js");
     addJsFile("/js/bs/buildResultsDiv.js");
@@ -59,7 +59,8 @@ public class FlakyTestsTab extends ProjectTab {
                            @NotNull SProject project,
                            @Nullable SUser user) {
     FlakyTests flakyTests = myHolder.getFlakyTestsFor(project);
-    FlakyTestsBean bean = new FlakyTestsBean(myTestRunsHolder, myProblemsManager, myTestManager, project, flakyTests);
+    FlakyTestsBean bean = new FlakyTestsBean(myTestRunsHolder, myProblemsManager, myTestManager, getProjectManager(),
+                                             project, flakyTests);
     model.put("bean", bean);
   }
 }

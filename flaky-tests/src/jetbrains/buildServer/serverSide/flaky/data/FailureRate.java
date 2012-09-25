@@ -27,6 +27,10 @@ public class FailureRate implements Serializable {
     return myFailures;
   }
 
+  public boolean hasFailures() {
+    return myFailures > 0;
+  }
+
   public boolean isAllFailures() {
     return myTotalRuns == myFailures;
   }

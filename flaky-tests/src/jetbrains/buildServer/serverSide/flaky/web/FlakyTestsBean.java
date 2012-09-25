@@ -5,7 +5,9 @@
 package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import jetbrains.buildServer.controllers.investigate.DummyTestRunImpl;
 import jetbrains.buildServer.responsibility.InvestigationTestRunsHolder;
 import jetbrains.buildServer.serverSide.*;
@@ -29,9 +31,12 @@ public class FlakyTestsBean {
   private final SProject myProject;
   private final FlakyTests myFlakyTests;
 
+  private final Map<Long, FlakyTestWebDetails> myDetails;
+
   public FlakyTestsBean(@NotNull InvestigationTestRunsHolder testRunsHolder,
                         @NotNull CurrentProblemsManager problemsManager,
                         @NotNull STestManager testManager,
+                        @NotNull ProjectManager projectManager,
                         @NotNull SProject project,
                         @NotNull FlakyTests flakyTests) {
     myTestRunsHolder = testRunsHolder;
@@ -39,6 +44,7 @@ public class FlakyTestsBean {
     myTestManager = testManager;
     myProject = project;
     myFlakyTests = flakyTests;
+    myDetails = buildDetails(flakyTests, projectManager);
   }
 
   @NotNull
@@ -58,6 +64,14 @@ public class FlakyTestsBean {
     return !myFlakyTests.getAlwaysFailingTests().isEmpty();
   }
 
+  public int getFlakyTestsSize() {
+    return myFlakyTests.getFlakyTests().size();
+  }
+
+  public int getAlwaysFailingTestsSize() {
+    return myFlakyTests.getAlwaysFailingTests().size();
+  }
+
   @NotNull
   public GroupedTestsBean getFlakyTests() {
     List<STestRun> testRuns = getTestRuns(myFlakyTests.getFlakyTests());
@@ -68,6 +82,11 @@ public class FlakyTestsBean {
   public GroupedTestsBean getAlwaysFailingTests() {
     List<STestRun> testRuns = getTestRuns(myFlakyTests.getAlwaysFailingTests());
     return GroupedTestsBean.createForTests(testRuns);
+  }
+
+  @NotNull
+  public Map<Long, FlakyTestWebDetails> getDetails() {
+    return myDetails;
   }
 
   @NotNull
@@ -93,6 +112,19 @@ public class FlakyTestsBean {
       }
 
       result.add(testRun);
+    }
+    return result;
+  }
+
+  @NotNull
+  private static Map<Long, FlakyTestWebDetails> buildDetails(@NotNull FlakyTests flakyTests,
+                                                             @NotNull ProjectManager projectManager) {
+    HashMap<Long, FlakyTestWebDetails> result = new HashMap<Long, FlakyTestWebDetails>();
+    for (FlakyTestData data : flakyTests.getFlakyTests()) {
+      result.put(data.getTestId(), new FlakyTestWebDetails(projectManager, data));
+    }
+    for (FlakyTestData data : flakyTests.getAlwaysFailingTests()) {
+      result.put(data.getTestId(), new FlakyTestWebDetails(projectManager, data));
     }
     return result;
   }

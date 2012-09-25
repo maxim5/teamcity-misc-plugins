@@ -1,16 +1,16 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
     taglib prefix="bs" tagdir="/WEB-INF/tags"
-
 %><jsp:useBean id="bean" type="jetbrains.buildServer.serverSide.flaky.web.FlakyTestsBean" scope="request"
-
 
 /><div id="flaky">
   <c:if test="${not bean.hasData}">
     No flaky tests
   </c:if>
   <c:if test="${bean.hasData}">
+    <c:set var="flakyDetails" value="${bean.details}" scope="request"/>
+
     <c:if test="${bean.hasFlaky}">
-      <c:set var="title">Flaky tests</c:set>
+      <c:set var="title">Flaky tests: ${bean.flakyTestsSize}</c:set>
       <bs:_collapsibleBlock title="${title}" id="flakyTestsBlock">
         <c:set var="groupBean" value="${bean.flakyTests}" scope="request"/>
         <c:set var="id" value="flaky" scope="request"/>
@@ -19,7 +19,7 @@
     </c:if>
 
     <c:if test="${bean.hasAlwaysFailing}">
-      <c:set var="title">Tests that are always failing</c:set>
+      <c:set var="title">Tests that always fail: ${bean.alwaysFailingTestsSize}</c:set>
       <bs:_collapsibleBlock title="${title}" id="alwaysFailingTestsBlock" collapsedByDefault="true">
         <div>
           The tests that have never been successful (typically <code>setUp</code> and <code>tearDown</code> methods).
