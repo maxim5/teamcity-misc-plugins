@@ -5,6 +5,7 @@
 package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import jetbrains.buildServer.serverSide.ProjectManager;
@@ -22,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 public class TestWebDetails {
   private final TestData myTestData;
 
-  // private final List<SBuildType> myAllBuildTypes;
+  private final List<SBuildType> myAllBuildTypes;
   private final List<SBuildType> myFailedInBuildTypes;
 
   // private final List<String> myAllAgents;
@@ -32,15 +33,19 @@ public class TestWebDetails {
                         @NotNull TestData testData) {
     myTestData = testData;
 
+    myAllBuildTypes = new ArrayList<SBuildType>();
     myFailedInBuildTypes = new ArrayList<SBuildType>();
     for (Map.Entry<String, FailureRate> entry : myTestData.getBuildTypeFailureRates().entrySet()) {
-      if (entry.getValue().hasFailures()) {
-        SBuildType buildType = projectManager.findBuildTypeById(entry.getKey());
-        if (buildType != null) {
+      SBuildType buildType = projectManager.findBuildTypeById(entry.getKey());
+      if (buildType != null) {
+        if (entry.getValue().hasFailures()) {
           myFailedInBuildTypes.add(buildType);
         }
+        myAllBuildTypes.add(buildType);
       }
     }
+    Collections.sort(myAllBuildTypes);
+    Collections.sort(myFailedInBuildTypes);
 
     myFailedOnAgents = new ArrayList<String>();
     for (Map.Entry<String, FailureRate> entry : myTestData.getAgentFailureRates().entrySet()) {
@@ -48,6 +53,7 @@ public class TestWebDetails {
         myFailedOnAgents.add(entry.getKey());
       }
     }
+    Collections.sort(myFailedOnAgents);
   }
 
   @NotNull
@@ -71,5 +77,10 @@ public class TestWebDetails {
   @NotNull
   public List<String> getFailedOnAgents() {
     return myFailedOnAgents;
+  }
+
+  @NotNull
+  public List<SBuildType> getAllBuildTypes() {
+    return myAllBuildTypes;
   }
 }

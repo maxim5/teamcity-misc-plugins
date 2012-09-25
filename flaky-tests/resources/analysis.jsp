@@ -1,9 +1,9 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
+<%@ include file="/include.jsp" %><%@
+    taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
     taglib prefix="bs" tagdir="/WEB-INF/tags"
 %><jsp:useBean id="bean" type="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisBean" scope="request"
 
 /><div id="flaky">
-  <c:set var="testAnalysisResult" value="${bean.testAnalysisResult}" scope="request"/>
   <c:choose>
     <c:when test="${bean.inProgress}">
       Tests analysis in progress. ${bean.progress.currentStep}

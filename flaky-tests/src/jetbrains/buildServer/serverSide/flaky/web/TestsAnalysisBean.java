@@ -66,6 +66,16 @@ public class TestsAnalysisBean {
     return myTestAnalysisResult.getStartDate() != null;
   }
 
+  public String getTestAnalysisDuration() {
+    Date startDate = myTestAnalysisResult.getStartDate();
+    Date finishDate = myTestAnalysisResult.getFinishDate();
+
+    assert startDate != null;
+    assert finishDate != null;
+    long duration = (finishDate.getTime() - startDate.getTime()) / 1000;
+    return duration + " seconds";
+  }
+
   @NotNull
   public SProject getProject() {
     return myProject;

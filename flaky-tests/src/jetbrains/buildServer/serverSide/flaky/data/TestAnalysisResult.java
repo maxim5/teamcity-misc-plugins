@@ -24,6 +24,7 @@ public class TestAnalysisResult implements Serializable {
 
   private Date myStartDate = null;
   private Date myFinishDate = null;
+  private int myTotalTests = 0;
 
   public TestAnalysisResult() {
   }
@@ -48,6 +49,10 @@ public class TestAnalysisResult implements Serializable {
     return myFinishDate;
   }
 
+  public int getTotalTests() {
+    return myTotalTests;
+  }
+
   public void setTests(@NotNull List<TestData> allTests) {
     myFlakyTests = new ArrayList<TestData>();
     myAlwaysFailingTests = new ArrayList<TestData>();
@@ -66,5 +71,9 @@ public class TestAnalysisResult implements Serializable {
 
   public void setFinishDate(@NotNull Date finishDate) {
     myFinishDate = finishDate;
+  }
+
+  public void setTotalTests(int totalTests) {
+    myTotalTests = totalTests;
   }
 }

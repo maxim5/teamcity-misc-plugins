@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import jetbrains.buildServer.messages.Status;
+import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.SQLRunner;
 import jetbrains.buildServer.serverSide.STest;
@@ -68,10 +69,12 @@ public class TestsAnalyser {
 
       try {
         List<RawData> buffer = new ArrayList<RawData>(1024);    // reuse the allocated buffer
+        Set<String> buildTypeIds = getBuildTypeIds(project);
 
         // Collecting failure statistics...
         List<TestFailureRate> allFailingTests = myFailuresStatistics.getFailingTests(project, 0.01f);
         myProgress.setTotalSize(allFailingTests.size());
+        result.setTotalTests(allFailingTests.size());
 
         // Analysis...
         myProgress.setCurrentStep("Analysing tests failures...");
@@ -84,7 +87,7 @@ public class TestsAnalyser {
           if (failureCount > 0 && successCount == 0) {
             testDataList.add(new TestData(test));
           } else if (totalCount > 1) {
-            TestData testData = getFlakyTestData(test, buffer);
+            TestData testData = getFlakyTestData(test, buildTypeIds, buffer);
             if (testData != null) {
               testDataList.add(testData);
             }
@@ -92,6 +95,8 @@ public class TestsAnalyser {
           myProgress.incDoneSize();
         }
       } finally {
+        // Finishing...
+        myProgress.setCurrentStep("Finishing...");
         algorithmsOnFinish();
         result.setFinishDate(new Date());
         result.setTests(testDataList);
@@ -102,8 +107,19 @@ public class TestsAnalyser {
     }
   }
 
+  @NotNull
+  private static Set<String> getBuildTypeIds(@NotNull SProject project) {
+    Set<String> result = new HashSet<String>();
+    for (SBuildType buildType : project.getBuildTypes()) {
+      result.add(buildType.getBuildTypeId());
+    }
+    return result;
+  }
+
   @Nullable
-  private TestData getFlakyTestData(@NotNull STest test, @NotNull final List<RawData> buffer) {
+  private TestData getFlakyTestData(@NotNull STest test,
+                                    @NotNull final Set<String> buildTypeIds,
+                                    @NotNull final List<RawData> buffer) {
     final long testId = test.getTestNameId();
     final long buildId = 0;
     buffer.clear();
@@ -121,6 +137,12 @@ public class TestsAnalyser {
               long modificationId = rs.getLong(5);
               String agentName = rs.getString(6);
               long buildStartTime = rs.getLong(7);
+
+              if (!buildTypeIds.contains(buildTypeId)) {
+                // The test runs in another projects don't matter here.
+                continue;
+              }
+
               buffer.add(new RawData(buildId, testId, status, buildTypeId,
                                      modificationId, agentName, buildStartTime));
             }
