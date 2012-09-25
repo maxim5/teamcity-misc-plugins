@@ -3,8 +3,9 @@
 
 <!--suppress SpringFacetInspection -->
 <beans default-autowire="constructor">
-  <bean class="jetbrains.buildServer.serverSide.flaky.FlakyTestsHolder"/>
-  <bean class="jetbrains.buildServer.serverSide.flaky.finder.FlakyTestsFinder"/>
-  <bean class="jetbrains.buildServer.serverSide.flaky.web.FlakyTestsTab"/>
-  <bean class="jetbrains.buildServer.serverSide.flaky.web.FindFlakyTestsController"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.finder.TestsAnalyser"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisTab"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.web.RunTestsAnalysisController"/>
 </beans>
