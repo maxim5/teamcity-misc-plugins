@@ -10,9 +10,23 @@
         Test failed in <bs:buildLinkFull build="${testDetails.buildWithoutChanges}"/>
       </c:when>
       <c:when test="${testDetails.buildsOnSameModificationReason}">
-        <div>Different results in two builds:</div>
-        <div><bs:buildLinkFull build="${testDetails.firstBuild}"/></div>
-        <div><bs:buildLinkFull build="${testDetails.secondBuild}"/></div>
+        <div>Different test results in builds with same sources:</div>
+
+        <table class="modificationBuilds">
+          <c:set var="build" value="${testDetails.failedInBuild}"/>
+          <tr class="buildTypeProblem">
+            <td class="fail">Failed in:</td>
+            <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
+            <td class="build"><%@ include file="/changeBuild.jspf" %></td>
+          </tr>
+
+          <tr class="buildTypeProblem">
+            <c:set var="build" value="${testDetails.successfulInBuild}"/>
+            <td class="success">Successful in:</td>
+            <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
+            <td class="build"><%@ include file="/changeBuild.jspf" %></td>
+          </tr>
+        </table>
       </c:when>
     </c:choose>
   </div>
@@ -45,7 +59,13 @@
               <c:forEach items="${testDetails.allAgents}" var="agent">
                 <c:set var="failureRate" value="${testDetails.testData.agentFailureRates[agent.name]}"/>
                 <tr ${failureRate.failures == 0 ? "class='zero'" : ""}>
-                  <td><bs:agentDetailsLink agent="${agent}"/></td>
+                  <%--<td><bs:agentDetailsLink agent="${agent}"/></td>--%>
+                  <td><bs:agentDetailsFullLink agent="${agent}"
+                                               doNotShowOutdated="true"
+                                               doNotShowOSIcon="false"
+                                               doNotShowPoolInfo="true"
+                                               showRunningStatus="false"
+                                               doNotShowUnavailableStatus="true"/></td>
                   <bs:changeRequest key="failureRate" value="${failureRate}">
                     <jsp:include page="failureRate.jsp"/>
                   </bs:changeRequest>

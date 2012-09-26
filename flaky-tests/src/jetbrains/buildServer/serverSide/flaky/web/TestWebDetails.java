@@ -14,7 +14,7 @@ import jetbrains.buildServer.serverSide.flaky.data.TestData;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * TODO: calculate total fail rate
+ * TODO: calculate total fail rate; small monitor: 100% width.
  *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
@@ -143,20 +143,20 @@ public class TestWebDetails {
   }
 
   @NotNull
-  public SBuild getFirstBuild() {
+  public SBuild getFailedInBuild() {
     Reason reason = myTestData.getReason();
     assert reason instanceof BuildsOnSameModificationReason;
-    long buildId = ((BuildsOnSameModificationReason)reason).getBuildId1();
+    long buildId = ((BuildsOnSameModificationReason)reason).getFailedInBuildId();
     SBuild build = myBuildServer.findBuildInstanceById(buildId);
     assert build != null;
     return build;
   }
 
   @NotNull
-  public SBuild getSecondBuild() {
+  public SBuild getSuccessfulInBuild() {
     Reason reason = myTestData.getReason();
     assert reason instanceof BuildsOnSameModificationReason;
-    long buildId = ((BuildsOnSameModificationReason)reason).getBuildId2();
+    long buildId = ((BuildsOnSameModificationReason)reason).getSuccessfulInBuild();
     SBuild build = myBuildServer.findBuildInstanceById(buildId);
     assert build != null;
     return build;

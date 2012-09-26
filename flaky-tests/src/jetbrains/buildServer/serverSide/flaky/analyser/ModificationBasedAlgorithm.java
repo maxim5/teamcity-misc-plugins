@@ -45,6 +45,7 @@ public class ModificationBasedAlgorithm implements CheckAlgorithm {
     return checkResult;
   }
 
+  @Nullable
   private CheckResult tryToFindInSeveralBuildTypes(@NotNull List<RawData> rawDataList) {
     myStatusMap.clear();
     for (RawData rawData : rawDataList) {
