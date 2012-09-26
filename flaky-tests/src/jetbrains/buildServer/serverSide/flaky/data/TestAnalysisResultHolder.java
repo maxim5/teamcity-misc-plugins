@@ -26,16 +26,16 @@ public class TestAnalysisResultHolder {
   }
 
   @NotNull
-  public TestAnalysisResult getFlakyTestsFor(@NotNull SProject project) {
+  public TestAnalysisResult getTestAnalysisResult(@NotNull SProject project) {
     return getFromCache(project);
   }
 
-  public void putFlakyTestsFor(@NotNull SProject project, @NotNull TestAnalysisResult testAnalysisResult) {
-    putToCache(project, testAnalysisResult);
+  public void putTestAnalysisResult(@NotNull SProject project, @NotNull TestAnalysisResult result) {
+    putToCache(project, result);
   }
 
-  private void putToCache(@NotNull SProject project, @NotNull TestAnalysisResult testAnalysisResult) {
-    Element element = new Element(project.getProjectId(), testAnalysisResult);
+  private void putToCache(@NotNull SProject project, @NotNull TestAnalysisResult result) {
+    Element element = new Element(project.getProjectId(), result);
     myCache.put(element);
   }
 

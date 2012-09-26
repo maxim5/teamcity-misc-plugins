@@ -53,6 +53,16 @@ public class TestAnalysisResult implements Serializable {
     return myTotalTests;
   }
 
+  @Nullable
+  public TestData findFlakyTest(long testId) {
+    for (TestData testData : myFlakyTests) {
+      if (testId == testData.getTestId()) {
+        return testData;
+      }
+    }
+    return null;
+  }
+
   public void setTests(@NotNull List<TestData> allTests) {
     myFlakyTests = new ArrayList<TestData>();
     myAlwaysFailingTests = new ArrayList<TestData>();

@@ -8,14 +8,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import jetbrains.buildServer.serverSide.BuildAgentManager;
 import jetbrains.buildServer.serverSide.ProjectManager;
+import jetbrains.buildServer.serverSide.SBuildAgent;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.flaky.data.FailureRate;
 import jetbrains.buildServer.serverSide.flaky.data.TestData;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * TODO: calculate fail rate
+ * TODO: calculate total fail rate
  *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
@@ -26,10 +28,11 @@ public class TestWebDetails {
   private final List<SBuildType> myAllBuildTypes;
   private final List<SBuildType> myFailedInBuildTypes;
 
-  // private final List<String> myAllAgents;
-  private final List<String> myFailedOnAgents;
+  private final List<SBuildAgent> myAllAgents;
+  private final List<SBuildAgent> myFailedOnAgents;
 
   public TestWebDetails(@NotNull ProjectManager projectManager,
+                        @NotNull BuildAgentManager agentManager,
                         @NotNull TestData testData) {
     myTestData = testData;
 
@@ -38,21 +41,27 @@ public class TestWebDetails {
     for (Map.Entry<String, FailureRate> entry : myTestData.getBuildTypeFailureRates().entrySet()) {
       SBuildType buildType = projectManager.findBuildTypeById(entry.getKey());
       if (buildType != null) {
+        myAllBuildTypes.add(buildType);
         if (entry.getValue().hasFailures()) {
           myFailedInBuildTypes.add(buildType);
         }
-        myAllBuildTypes.add(buildType);
       }
     }
     Collections.sort(myAllBuildTypes);
     Collections.sort(myFailedInBuildTypes);
 
-    myFailedOnAgents = new ArrayList<String>();
+    myAllAgents = new ArrayList<SBuildAgent>();
+    myFailedOnAgents = new ArrayList<SBuildAgent>();
     for (Map.Entry<String, FailureRate> entry : myTestData.getAgentFailureRates().entrySet()) {
-      if (entry.getValue().hasFailures()) {
-        myFailedOnAgents.add(entry.getKey());
+      SBuildAgent agent = agentManager.findAgentByName(entry.getKey(), true);
+      if (agent != null) {
+        myAllAgents.add(agent);
+        if (entry.getValue().hasFailures()) {
+          myFailedOnAgents.add(agent);
+        }
       }
     }
+    Collections.sort(myAllAgents);
     Collections.sort(myFailedOnAgents);
   }
 
@@ -75,12 +84,17 @@ public class TestWebDetails {
   }
 
   @NotNull
-  public List<String> getFailedOnAgents() {
-    return myFailedOnAgents;
+  public List<SBuildType> getAllBuildTypes() {
+    return myAllBuildTypes;
   }
 
   @NotNull
-  public List<SBuildType> getAllBuildTypes() {
-    return myAllBuildTypes;
+  public List<SBuildAgent> getAllAgents() {
+    return myAllAgents;
+  }
+
+  @NotNull
+  public List<SBuildAgent> getFailedOnAgents() {
+    return myFailedOnAgents;
   }
 }

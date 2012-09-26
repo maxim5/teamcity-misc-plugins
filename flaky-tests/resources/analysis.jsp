@@ -6,11 +6,15 @@
 /><div id="flaky">
   <c:choose>
     <c:when test="${bean.inProgress}">
-      Tests analysis in progress. ${bean.progress.currentStep}
+      <forms:progressRing className="progressRingInline"/> ${bean.progress.currentStep}
       <c:if test="${bean.progress.totalSize > 0}">
         (${bean.progress.doneSize} of ${bean.progress.totalSize})
       </c:if>
+      <script type="text/javascript">
+        BS.Flaky.scheduleReload();
+      </script>
     </c:when>
+
     <c:when test="${not bean.hasData}">
       <c:choose>
         <c:when test="${bean.testAnalysisEverStarted}">
@@ -18,9 +22,11 @@
         </c:when>
         <c:otherwise>
           No tests were analyzed yet.
+          <jsp:include page="startAnalysis.jsp"/>
         </c:otherwise>
       </c:choose>
     </c:when>
+
     <c:when test="${bean.hasData}">
       <jsp:include page="printResultShort.jsp"/>
 
@@ -48,8 +54,4 @@
       </c:if>
     </c:when>
   </c:choose>
-
-  <div style="margin-top: 2em;">
-    <a href="analyzeTests.html?projectId=${bean.project.projectId}">Calculate now!</a> (make it a POST).
-  </div>
 </div>

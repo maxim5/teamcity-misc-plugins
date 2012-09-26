@@ -5,3 +5,5 @@
   Last test analysis performed <b><bs:elapsedTime time="${testAnalysisResult.startDate}"/></b> (completed in ${bean.testAnalysisDuration}).
   Total tests analysed: <b>${testAnalysisResult.totalTests}</b>
 </div>
+
+<jsp:include page="startAnalysis.jsp"/>

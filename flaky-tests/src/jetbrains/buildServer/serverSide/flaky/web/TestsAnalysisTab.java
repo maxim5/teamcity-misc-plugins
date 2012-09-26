@@ -6,6 +6,7 @@ package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import jetbrains.buildServer.serverSide.BuildAgentManager;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.STestManager;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class TestsAnalysisTab extends ProjectTab {
   private final STestManager myTestManager;
-
+  private final BuildAgentManager myAgentManager;
   private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
@@ -34,11 +35,13 @@ public class TestsAnalysisTab extends ProjectTab {
                           @NotNull ProjectManager projectManager,
                           @NotNull PluginDescriptor descriptor,
                           @NotNull STestManager testManager,
+                          @NotNull BuildAgentManager agentManager,
                           @NotNull TestAnalysisProgressManager progressManager,
                           @NotNull TestAnalysisResultHolder holder) {
     super("analysis", "Tests analysis", pagePlaces, projectManager,
           descriptor.getPluginResourcesPath("/analysis.jsp"));
     myTestManager = testManager;
+    myAgentManager = agentManager;
     myProgressManager = progressManager;
     myHolder = holder;
 
@@ -57,7 +60,7 @@ public class TestsAnalysisTab extends ProjectTab {
                            @NotNull SProject project,
                            @Nullable SUser user) {
     TestAnalysisProgress progress = myProgressManager.getProgressFor(project);
-    TestsAnalysisBean bean = new TestsAnalysisBean(myTestManager, getProjectManager(),
+    TestsAnalysisBean bean = new TestsAnalysisBean(myTestManager, getProjectManager(), myAgentManager,
                                                    progress, myHolder, project);
     model.put("bean", bean);
   }
