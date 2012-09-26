@@ -39,15 +39,18 @@
 .test-details table.modificationBuilds td.fail {
   padding-left: 0;
   color: red;
+  white-space: nowrap;
 }
 
 .test-details table.modificationBuilds td.success {
   padding-left: 0;
   color: green;
+  white-space: nowrap;
 }
 
 .test-details table.modificationBuilds .bt {
   width: 20%;
+  white-space: nowrap;
 }
 
 .test-details table.modificationBuilds .build {
@@ -74,6 +77,10 @@
   padding: 5px;
 }
 
+.test-details .block .content td {
+  white-space: nowrap;
+}
+
 .test-details .block .zero {
   opacity: 0.5;
 
@@ -91,4 +98,5 @@
 .test-details .block .procent {
   width: 3em;
   text-align: right;
+  padding-left: 1em;
 }
