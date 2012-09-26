@@ -2,23 +2,23 @@
  * Copyright (c) 2000-2012 by JetBrains s.r.o. All Rights Reserved.
  * Use is subject to license terms.
  */
-package jetbrains.buildServer.serverSide.flaky.finder;
+package jetbrains.buildServer.serverSide.flaky.analyser;
 
 /**
 * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
 * @since 8.0
 */
 class RawData {
-  private final long myBuildId;
-  private final long myTestId;
-  private final int myStatus;
-  private final String myBuildTypeId;
-  private final long myModificationId;
-  private final String myAgentName;
-  private final long myBuildStartTime;
+  private long myBuildId;
+  private long myTestId;
+  private int myStatus;
+  private String myBuildTypeId;
+  private long myModificationId;
+  private String myAgentName;
+  private long myBuildStartTime;
 
-  RawData(long buildId, long testId, int status, String buildTypeId,
-          long modificationId, String agentName, long buildStartTime) {
+  public void set(long buildId, long testId, int status, String buildTypeId,
+                  long modificationId, String agentName, long buildStartTime) {
     myBuildId = buildId;
     myTestId = testId;
     myStatus = status;

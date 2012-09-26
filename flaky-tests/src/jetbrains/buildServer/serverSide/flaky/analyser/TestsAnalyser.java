@@ -2,7 +2,7 @@
  * Copyright (c) 2000-2012 by JetBrains s.r.o. All Rights Reserved.
  * Use is subject to license terms.
  */
-package jetbrains.buildServer.serverSide.flaky.finder;
+package jetbrains.buildServer.serverSide.flaky.analyser;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,11 +20,12 @@ import jetbrains.buildServer.serverSide.db.queries.GenericQuery;
 import jetbrains.buildServer.serverSide.flaky.data.*;
 import jetbrains.buildServer.serverSide.stat.TestFailureRate;
 import jetbrains.buildServer.serverSide.stat.TestFailuresStatistics;
+import jetbrains.buildServer.util.SimpleObjectPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * TODO: performance, possible problems with ReSharper (16`000 flaky tests?), use object pool
+ * TODO: performance, possible problems with ReSharper (16`000 flaky tests?)
  *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
@@ -34,16 +35,16 @@ public class TestsAnalyser {
   private final SQLRunner mySQLRunner;
   private final List<FinderAlgorithm> myAlgorithms;
 
-  private final TestAnalysisProgress myProgress;
+  private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
   public TestsAnalyser(@NotNull TestFailuresStatistics failuresStatistics,
                        @NotNull SQLRunner sqlRunner,
-                       @NotNull TestAnalysisProgress progress,
+                       @NotNull TestAnalysisProgressManager progressManager,
                        @NotNull TestAnalysisResultHolder holder) {
     myFailuresStatistics = failuresStatistics;
     mySQLRunner = sqlRunner;
-    myProgress = progress;
+    myProgressManager = progressManager;
     myHolder = holder;
 
     myAlgorithms = new ArrayList<FinderAlgorithm>();
@@ -52,18 +53,26 @@ public class TestsAnalyser {
   }
 
   public void analyseTestsInProject(@NotNull SProject project) {
-    if (!myProgress.getLock().compareAndSet(false, true)) {
+    TestAnalysisProgress progress = myProgressManager.getProgressFor(project);
+    if (!progress.getLock().compareAndSet(false, true)) {
       return;
     }
 
     try {
       // Starting...
-      myProgress.start("Starting...");
+      progress.start("Starting...");
       TestAnalysisResult result = new TestAnalysisResult();
       result.setStartDate(new Date());
 
       // Preparing data...
-      myProgress.setCurrentStep("Preparing data...");
+      progress.setCurrentStep("Preparing data...");
+      SimpleObjectPool<RawData> rawDataPool = new SimpleObjectPool<RawData>(
+        new SimpleObjectPool.ObjectFactory<RawData>() {
+          @NotNull
+          public RawData create() {
+            return new RawData();
+          }
+        }, 1024);
       List<TestData> testDataList = new ArrayList<TestData>();
       algorithmsOnStart();
 
@@ -73,11 +82,11 @@ public class TestsAnalyser {
 
         // Collecting failure statistics...
         List<TestFailureRate> allFailingTests = myFailuresStatistics.getFailingTests(project, 0.01f);
-        myProgress.setTotalSize(allFailingTests.size());
+        progress.setTotalSize(allFailingTests.size());
         result.setTotalTests(allFailingTests.size());
 
         // Analysis...
-        myProgress.setCurrentStep("Analysing tests failures...");
+        progress.setCurrentStep("Analysing tests failures...");
         for (TestFailureRate testFailureRate : allFailingTests) {
           STest test = testFailureRate.getTest();
           int failureCount = testFailureRate.getFailureCount();
@@ -87,23 +96,24 @@ public class TestsAnalyser {
           if (failureCount > 0 && successCount == 0) {
             testDataList.add(new TestData(test));
           } else if (totalCount > 1) {
-            TestData testData = getFlakyTestData(test, buildTypeIds, buffer);
+            TestData testData = getFlakyTestData(test, buildTypeIds, rawDataPool, buffer);
             if (testData != null) {
               testDataList.add(testData);
             }
           }
-          myProgress.incDoneSize();
+          progress.incDoneSize();
         }
       } finally {
         // Finishing...
-        myProgress.setCurrentStep("Finishing...");
+        progress.setCurrentStep("Finishing...");
         algorithmsOnFinish();
         result.setFinishDate(new Date());
         result.setTests(testDataList);
         myHolder.putFlakyTestsFor(project, result);
       }
     } finally {
-      myProgress.getLock().set(false);
+      progress.getLock().set(false);
+      myProgressManager.clearProgressFor(project);
     }
   }
 
@@ -119,6 +129,7 @@ public class TestsAnalyser {
   @Nullable
   private TestData getFlakyTestData(@NotNull STest test,
                                     @NotNull final Set<String> buildTypeIds,
+                                    @NotNull final SimpleObjectPool<RawData> rawDataPool,
                                     @NotNull final List<RawData> buffer) {
     final long testId = test.getTestNameId();
     final long buildId = 0;
@@ -143,8 +154,10 @@ public class TestsAnalyser {
                 continue;
               }
 
-              buffer.add(new RawData(buildId, testId, status, buildTypeId,
-                                     modificationId, agentName, buildStartTime));
+              RawData rawData = rawDataPool.getFromPool();
+              rawData.set(buildId, testId, status, buildTypeId,
+                          modificationId, agentName, buildStartTime);
+              buffer.add(rawData);
             }
             return null;
           }
@@ -159,7 +172,6 @@ public class TestsAnalyser {
       return null;
     }
 
-    // RawDataDetails rawDataDetails = RawDataDetails.compute(buffer);
     return runAlgorithms(test, buffer);
   }
 

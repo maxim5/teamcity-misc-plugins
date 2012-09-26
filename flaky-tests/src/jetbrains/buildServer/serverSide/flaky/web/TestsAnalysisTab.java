@@ -6,12 +6,11 @@ package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import jetbrains.buildServer.responsibility.InvestigationTestRunsHolder;
-import jetbrains.buildServer.serverSide.CurrentProblemsManager;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.STestManager;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgressManager;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.web.openapi.PagePlaces;
@@ -26,35 +25,30 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class TestsAnalysisTab extends ProjectTab {
-  private final InvestigationTestRunsHolder myTestRunsHolder;
-  private final CurrentProblemsManager myProblemsManager;
   private final STestManager myTestManager;
 
-  private final TestAnalysisProgress myProgress;
+  private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
   public TestsAnalysisTab(@NotNull PagePlaces pagePlaces,
                           @NotNull ProjectManager projectManager,
                           @NotNull PluginDescriptor descriptor,
-                          @NotNull InvestigationTestRunsHolder testRunsHolder,
-                          @NotNull CurrentProblemsManager problemsManager,
                           @NotNull STestManager testManager,
-                          @NotNull TestAnalysisProgress progress,
+                          @NotNull TestAnalysisProgressManager progressManager,
                           @NotNull TestAnalysisResultHolder holder) {
     super("analysis", "Tests analysis", pagePlaces, projectManager,
           descriptor.getPluginResourcesPath("/analysis.jsp"));
-    myTestRunsHolder = testRunsHolder;
-    myProblemsManager = problemsManager;
     myTestManager = testManager;
-    myProgress = progress;
+    myProgressManager = progressManager;
     myHolder = holder;
 
     setPosition(PositionConstraint.after("mutedProblems"));
-    addCssFile(descriptor.getPluginResourcesPath("/analysis.css"));
     addCssFile("/css/viewModification.css");
     addJsFile("/js/bs/blocksWithHeader.js");
     addJsFile("/js/bs/buildResultsDiv.js");
     addJsFile("/js/bs/testDetails.js");
+    addCssFile(descriptor.getPluginResourcesPath("/analysis.css"));
+    addJsFile(descriptor.getPluginResourcesPath("/analysis.js"));
   }
 
   @Override
@@ -62,9 +56,9 @@ public class TestsAnalysisTab extends ProjectTab {
                            @NotNull HttpServletRequest request,
                            @NotNull SProject project,
                            @Nullable SUser user) {
-    TestsAnalysisBean bean = new TestsAnalysisBean(myTestRunsHolder, myProblemsManager,
-                                                   myTestManager, getProjectManager(),
-                                                   myProgress, myHolder, project);
+    TestAnalysisProgress progress = myProgressManager.getProgressFor(project);
+    TestsAnalysisBean bean = new TestsAnalysisBean(myTestManager, getProjectManager(),
+                                                   progress, myHolder, project);
     model.put("bean", bean);
   }
 }

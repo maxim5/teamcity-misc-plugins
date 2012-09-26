@@ -26,17 +26,19 @@
         <c:choose>
           <c:when test="${details.testData.alwaysFailing}"></c:when>
           <c:when test="${details.runInSingleBuildType}">
-            run only in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/> build configuration
+            run only in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/>
           </c:when>
           <c:otherwise>
-            fails in
+            failed in
             <bs:changeRequest key="buildTypes" value="${details.failedInBuildTypes}">
               <jsp:include page="buildTypes.jsp"/>
             </bs:changeRequest>
 
-            <bs:changeRequest key="buildTypes" value="${details.allBuildTypes}">
-              (run in <jsp:include page="buildTypes.jsp"/>)
-            </bs:changeRequest>
+            <c:if test="${fn:length(details.failedInBuildTypes) != fn:length(details.allBuildTypes)}">
+              <bs:changeRequest key="buildTypes" value="${details.allBuildTypes}">
+                (run in <jsp:include page="buildTypes.jsp"/>)
+              </bs:changeRequest>
+            </c:if>
           </c:otherwise>
         </c:choose>
       </td>
