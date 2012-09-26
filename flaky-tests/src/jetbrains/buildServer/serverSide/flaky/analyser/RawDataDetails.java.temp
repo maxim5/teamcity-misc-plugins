@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2000-2012 by JetBrains s.r.o. All Rights Reserved.
+ * Use is subject to license terms.
+ */
+package jetbrains.buildServer.serverSide.flaky.finder;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import jetbrains.buildServer.messages.Status;
+import org.jetbrains.annotations.NotNull;
+
+/**
+* @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
+* @since 8.0
+*/
+class RawDataDetails {
+  private final int myTotalRuns;
+  private final int myTotalFailures;
+  private final int myBuildTypesRun;
+  private final int myBuildTypesFailed;
+
+  RawDataDetails(int totalRuns, int totalFailures,
+                 int buildTypesRun, int buildTypesFailed) {
+    myTotalRuns = totalRuns;
+    myTotalFailures = totalFailures;
+    myBuildTypesRun = buildTypesRun;
+    myBuildTypesFailed = buildTypesFailed;
+  }
+
+  @NotNull
+  public static RawDataDetails compute(@NotNull Collection<RawData> data) {
+    int totalRuns = data.size(),
+        totalFailures = 0;
+
+    Map<String, Integer> buildTypes = new HashMap<String, Integer>();
+    for (RawData rawData : data) {
+      int status = rawData.getStatus();
+      String buildTypeId = rawData.getBuildTypeId();
+
+      if (status == Status.FAILURE.getPriority()) {
+        ++totalFailures;
+      }
+
+      Integer currentStatus = buildTypes.get(buildTypeId);
+      if (currentStatus == null || currentStatus < status) {
+        buildTypes.put(buildTypeId, status);
+      }
+    }
+
+    int buildTypesRun = buildTypes.size(),
+        buildTypesFailed = 0;
+    for (Integer status : buildTypes.values()) {
+      if (status == Status.FAILURE.getPriority()) {
+        ++buildTypesFailed;
+      }
+    }
+
+    return new RawDataDetails(totalRuns, totalFailures, buildTypesRun, buildTypesFailed);
+  }
+
+  public int getTotalRuns() {
+    return myTotalRuns;
+  }
+
+  public int getTotalFailures() {
+    return myTotalFailures;
+  }
+
+  public int getBuildTypesRun() {
+    return myBuildTypesRun;
+  }
+
+  public int getBuildTypesFailed() {
+    return myBuildTypesFailed;
+  }
+}

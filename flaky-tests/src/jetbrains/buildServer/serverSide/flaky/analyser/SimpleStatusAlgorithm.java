@@ -2,7 +2,7 @@
  * Copyright (c) 2000-2012 by JetBrains s.r.o. All Rights Reserved.
  * Use is subject to license terms.
  */
-package jetbrains.buildServer.serverSide.flaky.finder;
+package jetbrains.buildServer.serverSide.flaky.analyser;
 
 import java.util.List;
 import jetbrains.buildServer.messages.Status;

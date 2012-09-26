@@ -6,13 +6,13 @@ package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.*;
 import jetbrains.buildServer.controllers.investigate.DummyTestRunImpl;
+import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.responsibility.InvestigationTestRunsHolder;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResult;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder;
 import jetbrains.buildServer.serverSide.flaky.data.TestData;
-import jetbrains.buildServer.tests.TestName;
 import jetbrains.buildServer.web.problems.GroupedTestsBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class TestsAnalysisBean {
-  private final InvestigationTestRunsHolder myTestRunsHolder;
-  private final CurrentProblemsManager myProblemsManager;
   private final STestManager myTestManager;
 
   private final SProject myProject;
@@ -35,15 +33,11 @@ public class TestsAnalysisBean {
 
   private final TestAnalysisProgress myProgress;
 
-  public TestsAnalysisBean(@NotNull InvestigationTestRunsHolder testRunsHolder,
-                           @NotNull CurrentProblemsManager problemsManager,
-                           @NotNull STestManager testManager,
+  public TestsAnalysisBean(@NotNull STestManager testManager,
                            @NotNull ProjectManager projectManager,
                            @NotNull TestAnalysisProgress progress,
                            @NotNull TestAnalysisResultHolder holder,
                            @NotNull SProject project) {
-    myTestRunsHolder = testRunsHolder;
-    myProblemsManager = problemsManager;
     myTestManager = testManager;
     myProgress = progress;
     myProject = project;
@@ -122,25 +116,15 @@ public class TestsAnalysisBean {
   private List<STestRun> getTestRuns(@NotNull List<TestData> data) {
     ArrayList<STestRun> result = new ArrayList<STestRun>();
     for (TestData testData : data) {
-      long testId = testData.getTestId();
-
-      List<STestRun> testRuns = myTestRunsHolder.getLastTestRuns(testId, myProject.getProjectId(), false);
-      if (testRuns != null && !testRuns.isEmpty()) {
-        result.addAll(testRuns);
-        continue;
-      }
-
-      TestName testName = TestName2Index.getInstance().getTestName(testId);
-      if (testName == null) {
-        continue;
-      }
-      STestRun testRun = myProblemsManager.findProblemRunForTest(myProject, testName, true);
-      if (testRun == null) {
-        TestEx test = (TestEx) myTestManager.findTest(testId, myProject.getProjectId());
-        testRun = new DummyTestRunImpl(test);
-      }
-
-      result.add(testRun);
+      //noinspection deprecation
+      TestEx test = (TestEx) myTestManager.createTest(testData.getTestId(), myProject.getProjectId());
+      result.add(new DummyTestRunImpl(test) {
+        @NotNull
+        @Override
+        public Status getStatus() {
+          return Status.FAILURE;  // A hack to force the link on the web.
+        }
+      });
     }
     return result;
   }
