@@ -19,6 +19,41 @@
   border-collapse: collapse;
 }
 
+.test-details table.modificationBuilds {
+  width: 80%;
+  margin: 0.4em 0 2em 0;
+}
+
+.test-details table.modificationBuilds tr {
+  border: none;
+}
+
+.test-details table.modificationBuilds td {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border: none;
+  vertical-align: top;
+  line-height: 1em;
+}
+
+.test-details table.modificationBuilds td.fail {
+  padding-left: 0;
+  color: red;
+}
+
+.test-details table.modificationBuilds td.success {
+  padding-left: 0;
+  color: green;
+}
+
+.test-details table.modificationBuilds .bt {
+  width: 20%;
+}
+
+.test-details table.modificationBuilds .build {
+  width: 70%;
+}
+
 .test-details td.block {
   width: 30%;
   vertical-align: top;
@@ -41,6 +76,16 @@
 
 .test-details .block .zero {
   opacity: 0.5;
+
+  -webkit-transition: opacity 0.1s linear;
+  -moz-transition: opacity 0.1s linear;
+  -ms-transition: opacity 0.1s linear;
+  -o-transition: opacity 0.1s linear;
+  transition: opacity 0.1s linear;
+}
+
+.test-details .block .zero:hover {
+  opacity: 1.0;
 }
 
 .test-details .block .procent {

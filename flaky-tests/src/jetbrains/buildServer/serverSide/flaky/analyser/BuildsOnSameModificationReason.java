@@ -4,6 +4,7 @@
  */
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
+import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.serverSide.flaky.data.Reason;
 
 /**
@@ -11,31 +12,20 @@ import jetbrains.buildServer.serverSide.flaky.data.Reason;
  * @since 8.0
  */
 public class BuildsOnSameModificationReason implements Reason {
-  private final int myStatus1;
-  private final long myBuildId1;
-  private final int myStatus2;
-  private final long myBuildId2;
+  private final long myFailedInBuildId;
+  private final long mySuccessfulInBuild;
 
-  public BuildsOnSameModificationReason(int status1, long buildId1, int status2, long buildId2) {
-    myStatus1 = status1;
-    myBuildId1 = buildId1;
-    myStatus2 = status2;
-    myBuildId2 = buildId2;
+  public BuildsOnSameModificationReason(int status1, long build1, int status2, long build2) {
+    assert status1 != status2;
+    myFailedInBuildId = status1 == Status.FAILURE.getPriority() ? build1 : build2;
+    mySuccessfulInBuild = status1 == Status.FAILURE.getPriority() ? build2 : build1;
   }
 
-  public int getStatus1() {
-    return myStatus1;
+  public long getFailedInBuildId() {
+    return myFailedInBuildId;
   }
 
-  public long getBuildId1() {
-    return myBuildId1;
-  }
-
-  public int getStatus2() {
-    return myStatus2;
-  }
-
-  public long getBuildId2() {
-    return myBuildId2;
+  public long getSuccessfulInBuild() {
+    return mySuccessfulInBuild;
   }
 }
