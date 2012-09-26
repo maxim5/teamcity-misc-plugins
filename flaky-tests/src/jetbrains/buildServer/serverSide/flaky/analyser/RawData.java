@@ -5,6 +5,8 @@
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
 /**
+ * TODO: order by modification id.
+ *
 * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
 * @since 8.0
 */

@@ -8,10 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import jetbrains.buildServer.messages.Status;
-import jetbrains.buildServer.serverSide.SBuildType;
-import jetbrains.buildServer.serverSide.SProject;
-import jetbrains.buildServer.serverSide.SQLRunner;
-import jetbrains.buildServer.serverSide.STest;
+import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.db.DBAction;
 import jetbrains.buildServer.serverSide.db.DBException;
 import jetbrains.buildServer.serverSide.db.DBFunctions;
@@ -36,12 +33,13 @@ public class TestsAnalyser {
 
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
-  private final List<FinderAlgorithm> myAlgorithms;
+  private final List<CheckAlgorithm> myAlgorithms;
 
   private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
-  public TestsAnalyser(@NotNull TestFailuresStatistics failuresStatistics,
+  public TestsAnalyser(@NotNull SBuildServer buildServer,
+                       @NotNull TestFailuresStatistics failuresStatistics,
                        @NotNull SQLRunner sqlRunner,
                        @NotNull TestAnalysisProgressManager progressManager,
                        @NotNull TestAnalysisResultHolder holder) {
@@ -50,9 +48,9 @@ public class TestsAnalyser {
     myProgressManager = progressManager;
     myHolder = holder;
 
-    myAlgorithms = new ArrayList<FinderAlgorithm>();
+    myAlgorithms = new ArrayList<CheckAlgorithm>();
     myAlgorithms.add(new SimpleStatusAlgorithm());
-    myAlgorithms.add(new ModificationBasedAlgorithm());
+    myAlgorithms.add(new ModificationBasedAlgorithm(buildServer));
   }
 
   public void analyseTestsInProject(@NotNull SProject project) {
@@ -121,7 +119,7 @@ public class TestsAnalyser {
     SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
     int buildId = 0;
     collectRawData(testId, buildId, buildTypeIds, rawDataPool, buffer);
-    return buildTestData(testId, project.getProjectId(), buffer);
+    return buildTestData(testId, project.getProjectId(), null, buffer);
   }
 
   @Nullable
@@ -180,24 +178,24 @@ public class TestsAnalyser {
   }
 
   private void algorithmsOnStart() {
-    for (FinderAlgorithm algorithm : myAlgorithms) {
+    for (CheckAlgorithm algorithm : myAlgorithms) {
       algorithm.onStart();
     }
   }
 
   @Nullable
   private TestData runAlgorithms(@NotNull STest test, @NotNull List<RawData> data) {
-    for (FinderAlgorithm algorithm : myAlgorithms) {
-      Boolean checkResult = algorithm.checkTest(test, data);
-      if (checkResult != null) {
-        return checkResult ? buildTestData(test.getTestNameId(), test.getProjectId(), data) : null;
+    for (CheckAlgorithm algorithm : myAlgorithms) {
+      CheckResult checkResult = algorithm.checkTest(test, data);
+      if (checkResult != null && !checkResult.getType().isOrdinary()) {
+        return buildTestData(test.getTestNameId(), test.getProjectId(), checkResult.getReason(), data);
       }
     }
     return null;    // we're not sure about this test.
   }
 
   private void algorithmsOnFinish() {
-    for (FinderAlgorithm algorithm : myAlgorithms) {
+    for (CheckAlgorithm algorithm : myAlgorithms) {
       algorithm.onFinish();
     }
   }
@@ -205,6 +203,7 @@ public class TestsAnalyser {
   @NotNull
   private TestData buildTestData(long testId,
                                  @NotNull String projectId,
+                                 @Nullable Reason reason,
                                  @NotNull List<RawData> data) {
     FailureRate failureRate;
     Map<String, FailureRate> buildTypeFailureRates = new HashMap<String, FailureRate>();
@@ -235,7 +234,7 @@ public class TestsAnalyser {
       }
     }
 
-    return new TestData(testId, projectId, buildTypeFailureRates, agentFailureRates);
+    return new TestData(testId, projectId, buildTypeFailureRates, agentFailureRates, reason);
   }
 
   @NotNull

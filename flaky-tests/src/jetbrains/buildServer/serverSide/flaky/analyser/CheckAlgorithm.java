@@ -13,14 +13,12 @@ import org.jetbrains.annotations.Nullable;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public interface FinderAlgorithm {
+public interface CheckAlgorithm {
   void onStart();
 
   void onFinish();
 
-  // Definitely YES - true
-  // Definitely NO  - false
   // Unknown        - null
   @Nullable
-  Boolean checkTest(@NotNull STest test, @NotNull List<RawData> rawDataList);
+  CheckResult checkTest(@NotNull STest test, @NotNull List<RawData> rawDataList);
 }

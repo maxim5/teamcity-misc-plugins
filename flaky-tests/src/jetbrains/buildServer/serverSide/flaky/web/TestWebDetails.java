@@ -4,15 +4,12 @@
  */
 package jetbrains.buildServer.serverSide.flaky.web;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import jetbrains.buildServer.serverSide.BuildAgentManager;
-import jetbrains.buildServer.serverSide.ProjectManager;
-import jetbrains.buildServer.serverSide.SBuildAgent;
-import jetbrains.buildServer.serverSide.SBuildType;
+import java.util.*;
+import jetbrains.buildServer.serverSide.*;
+import jetbrains.buildServer.serverSide.flaky.analyser.BuildWithoutChangesReason;
+import jetbrains.buildServer.serverSide.flaky.analyser.BuildsOnSameModificationReason;
 import jetbrains.buildServer.serverSide.flaky.data.FailureRate;
+import jetbrains.buildServer.serverSide.flaky.data.Reason;
 import jetbrains.buildServer.serverSide.flaky.data.TestData;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
  * @since 8.0
  */
 public class TestWebDetails {
+  private final SBuildServer myBuildServer;
   private final TestData myTestData;
 
   private final List<SBuildType> myAllBuildTypes;
@@ -31,14 +29,17 @@ public class TestWebDetails {
   private final List<SBuildAgent> myAllAgents;
   private final List<SBuildAgent> myFailedOnAgents;
 
-  public TestWebDetails(@NotNull ProjectManager projectManager,
+  public TestWebDetails(@NotNull SBuildServer buildServer,
+                        @NotNull ProjectManager projectManager,
                         @NotNull BuildAgentManager agentManager,
                         @NotNull TestData testData) {
+    myBuildServer = buildServer;
     myTestData = testData;
 
     myAllBuildTypes = new ArrayList<SBuildType>();
     myFailedInBuildTypes = new ArrayList<SBuildType>();
-    for (Map.Entry<String, FailureRate> entry : myTestData.getBuildTypeFailureRates().entrySet()) {
+    final Map<String, FailureRate> buildTypeFailureRates = myTestData.getBuildTypeFailureRates();
+    for (Map.Entry<String, FailureRate> entry : buildTypeFailureRates.entrySet()) {
       SBuildType buildType = projectManager.findBuildTypeById(entry.getKey());
       if (buildType != null) {
         myAllBuildTypes.add(buildType);
@@ -47,12 +48,19 @@ public class TestWebDetails {
         }
       }
     }
-    Collections.sort(myAllBuildTypes);
-    Collections.sort(myFailedInBuildTypes);
+    Collections.sort(myAllBuildTypes, new Comparator<SBuildType>() {
+      public int compare(SBuildType bt1, SBuildType bt2) {
+        FailureRate failureRate1 = buildTypeFailureRates.get(bt1.getBuildTypeId());
+        FailureRate failureRate2 = buildTypeFailureRates.get(bt2.getBuildTypeId());
+        int result = failureRate1.compareTo(failureRate2);
+        return result != 0 ? result : bt1.compareTo(bt2);
+      }
+    });
 
     myAllAgents = new ArrayList<SBuildAgent>();
     myFailedOnAgents = new ArrayList<SBuildAgent>();
-    for (Map.Entry<String, FailureRate> entry : myTestData.getAgentFailureRates().entrySet()) {
+    final Map<String, FailureRate> agentFailureRates = myTestData.getAgentFailureRates();
+    for (Map.Entry<String, FailureRate> entry : agentFailureRates.entrySet()) {
       SBuildAgent agent = agentManager.findAgentByName(entry.getKey(), true);
       if (agent != null) {
         myAllAgents.add(agent);
@@ -61,8 +69,14 @@ public class TestWebDetails {
         }
       }
     }
-    Collections.sort(myAllAgents);
-    Collections.sort(myFailedOnAgents);
+    Collections.sort(myAllAgents, new Comparator<SBuildAgent>() {
+      public int compare(SBuildAgent agent1, SBuildAgent agent2) {
+        FailureRate failureRate1 = agentFailureRates.get(agent1.getName());
+        FailureRate failureRate2 = agentFailureRates.get(agent2.getName());
+        int result = failureRate1.compareTo(failureRate2);
+        return result != 0 ? result : agent1.compareTo(agent2);
+      }
+    });
   }
 
   @NotNull
@@ -70,13 +84,21 @@ public class TestWebDetails {
     return myTestData;
   }
 
-  public boolean isRunInSingleBuildType() {
+  public boolean isFailedOnlyInSingleBuildType() {
+    return myAllBuildTypes.size() > 1 && myFailedInBuildTypes.size() == 1;
+  }
+
+  public boolean isFailedOnlyOnSingleAgent() {
+    return myAllAgents.size() > 1 && myFailedOnAgents.size() == 1;
+  }
+
+  /*public boolean isRunInSingleBuildType() {
     return myTestData.getBuildTypeFailureRates().size() == 1;
   }
 
   public boolean isRunOnSingleAgent() {
     return myTestData.getAgentFailureRates().size() == 1;
-  }
+  }*/
 
   @NotNull
   public List<SBuildType> getFailedInBuildTypes() {
@@ -96,5 +118,47 @@ public class TestWebDetails {
   @NotNull
   public List<SBuildAgent> getFailedOnAgents() {
     return myFailedOnAgents;
+  }
+
+  public boolean isHasReason() {
+    return myTestData.getReason() != null;
+  }
+
+  public boolean isWithoutChangesReason() {
+    return myTestData.getReason() instanceof BuildWithoutChangesReason;
+  }
+
+  @NotNull
+  public SBuild getBuildWithoutChanges() {
+    Reason reason = myTestData.getReason();
+    assert reason instanceof BuildWithoutChangesReason;
+    long buildId = ((BuildWithoutChangesReason)reason).getBuildId();
+    SBuild build = myBuildServer.findBuildInstanceById(buildId);
+    assert build != null;
+    return build;
+  }
+
+  public boolean isBuildsOnSameModificationReason() {
+    return myTestData.getReason() instanceof BuildsOnSameModificationReason;
+  }
+
+  @NotNull
+  public SBuild getFirstBuild() {
+    Reason reason = myTestData.getReason();
+    assert reason instanceof BuildsOnSameModificationReason;
+    long buildId = ((BuildsOnSameModificationReason)reason).getBuildId1();
+    SBuild build = myBuildServer.findBuildInstanceById(buildId);
+    assert build != null;
+    return build;
+  }
+
+  @NotNull
+  public SBuild getSecondBuild() {
+    Reason reason = myTestData.getReason();
+    assert reason instanceof BuildsOnSameModificationReason;
+    long buildId = ((BuildsOnSameModificationReason)reason).getBuildId2();
+    SBuild build = myBuildServer.findBuildInstanceById(buildId);
+    assert build != null;
+    return build;
   }
 }

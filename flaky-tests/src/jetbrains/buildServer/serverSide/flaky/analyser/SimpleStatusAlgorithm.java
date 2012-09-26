@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class SimpleStatusAlgorithm implements FinderAlgorithm {
+public class SimpleStatusAlgorithm implements CheckAlgorithm {
   public void onStart() {
     // Do nothing.
   }
@@ -24,7 +24,7 @@ public class SimpleStatusAlgorithm implements FinderAlgorithm {
   }
 
   @Nullable
-  public Boolean checkTest(@NotNull STest test, @NotNull List<RawData> rawDataList) {
+  public CheckResult checkTest(@NotNull STest test, @NotNull List<RawData> rawDataList) {
     int status = rawDataList.get(0).getStatus();
     for (RawData rawData : rawDataList) {
       int currentStatus = rawData.getStatus();
@@ -33,7 +33,8 @@ public class SimpleStatusAlgorithm implements FinderAlgorithm {
       }
     }
 
-    // Return true if status is always a failure.
-    return status != Status.NORMAL.getPriority();
+    return status != Status.NORMAL.getPriority() ?
+             CheckResult.ALWAYS_FAILING_RESULT :        // always a failure
+             CheckResult.ORDINARY_RESULT;               // always successful
   }
 }
