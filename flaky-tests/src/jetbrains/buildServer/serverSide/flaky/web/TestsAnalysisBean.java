@@ -35,6 +35,7 @@ public class TestsAnalysisBean {
 
   public TestsAnalysisBean(@NotNull STestManager testManager,
                            @NotNull ProjectManager projectManager,
+                           @NotNull BuildAgentManager agentManager,
                            @NotNull TestAnalysisProgress progress,
                            @NotNull TestAnalysisResultHolder holder,
                            @NotNull SProject project) {
@@ -46,8 +47,8 @@ public class TestsAnalysisBean {
       myTestAnalysisResult = TestAnalysisResult.EMPTY_FLAKY_TESTS;
       myDetails = Collections.emptyMap();
     } else {
-      myTestAnalysisResult = holder.getFlakyTestsFor(project);
-      myDetails = buildDetails(myTestAnalysisResult, projectManager);
+      myTestAnalysisResult = holder.getTestAnalysisResult(project);
+      myDetails = buildDetails(myTestAnalysisResult, projectManager, agentManager);
     }
   }
 
@@ -131,13 +132,14 @@ public class TestsAnalysisBean {
 
   @NotNull
   private static Map<Long, TestWebDetails> buildDetails(@NotNull TestAnalysisResult testAnalysisResult,
-                                                        @NotNull ProjectManager projectManager) {
+                                                        @NotNull ProjectManager projectManager,
+                                                        @NotNull BuildAgentManager agentManager) {
     HashMap<Long, TestWebDetails> result = new HashMap<Long, TestWebDetails>();
     for (TestData data : testAnalysisResult.getFlakyTests()) {
-      result.put(data.getTestId(), new TestWebDetails(projectManager, data));
+      result.put(data.getTestId(), new TestWebDetails(projectManager, agentManager, data));
     }
     for (TestData data : testAnalysisResult.getAlwaysFailingTests()) {
-      result.put(data.getTestId(), new TestWebDetails(projectManager, data));
+      result.put(data.getTestId(), new TestWebDetails(projectManager, agentManager, data));
     }
     return result;
   }

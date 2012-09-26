@@ -43,12 +43,16 @@ public class RunTestsAnalysisController extends BaseController {
       return null;
     }
 
-    SProject project = myProjectManager.findProjectById(projectId);
+    final SProject project = myProjectManager.findProjectById(projectId);
     if (project == null) {
       return null;
     }
 
-    myAnalyser.analyseTestsInProject(project);
+    new Thread(new Runnable() {
+      public void run() {
+        myAnalyser.analyseTestsInProject(project);
+      }
+    }, "Tests analyser").start();
 
     return null;
   }

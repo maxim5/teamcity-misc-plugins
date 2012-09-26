@@ -31,6 +31,9 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class TestsAnalyser {
+  private static final int BUFFER_SIZE = 1024;
+  private static final int POOL_SIZE = 1024;
+
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
   private final List<FinderAlgorithm> myAlgorithms;
@@ -66,18 +69,12 @@ public class TestsAnalyser {
 
       // Preparing data...
       progress.setCurrentStep("Preparing data...");
-      SimpleObjectPool<RawData> rawDataPool = new SimpleObjectPool<RawData>(
-        new SimpleObjectPool.ObjectFactory<RawData>() {
-          @NotNull
-          public RawData create() {
-            return new RawData();
-          }
-        }, 1024);
+      SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
       List<TestData> testDataList = new ArrayList<TestData>();
       algorithmsOnStart();
 
       try {
-        List<RawData> buffer = new ArrayList<RawData>(1024);    // reuse the allocated buffer
+        List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);    // reuse the allocated buffer
         Set<String> buildTypeIds = getBuildTypeIds(project);
 
         // Collecting failure statistics...
@@ -96,7 +93,7 @@ public class TestsAnalyser {
           if (failureCount > 0 && successCount == 0) {
             testDataList.add(new TestData(test));
           } else if (totalCount > 1) {
-            TestData testData = getFlakyTestData(test, buildTypeIds, rawDataPool, buffer);
+            TestData testData = getTestData(test, buildTypeIds, rawDataPool, buffer);
             if (testData != null) {
               testDataList.add(testData);
             }
@@ -109,7 +106,7 @@ public class TestsAnalyser {
         algorithmsOnFinish();
         result.setFinishDate(new Date());
         result.setTests(testDataList);
-        myHolder.putFlakyTestsFor(project, result);
+        myHolder.putTestAnalysisResult(project, result);
       }
     } finally {
       progress.getLock().set(false);
@@ -118,23 +115,37 @@ public class TestsAnalyser {
   }
 
   @NotNull
-  private static Set<String> getBuildTypeIds(@NotNull SProject project) {
-    Set<String> result = new HashSet<String>();
-    for (SBuildType buildType : project.getBuildTypes()) {
-      result.add(buildType.getBuildTypeId());
-    }
-    return result;
+  public TestData getTestData(long testId, @NotNull SProject project) {
+    List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);
+    Set<String> buildTypeIds = getBuildTypeIds(project);
+    SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
+    int buildId = 0;
+    collectRawData(testId, buildId, buildTypeIds, rawDataPool, buffer);
+    return buildTestData(testId, project.getProjectId(), buffer);
   }
 
   @Nullable
-  private TestData getFlakyTestData(@NotNull STest test,
-                                    @NotNull final Set<String> buildTypeIds,
-                                    @NotNull final SimpleObjectPool<RawData> rawDataPool,
-                                    @NotNull final List<RawData> buffer) {
-    final long testId = test.getTestNameId();
-    final long buildId = 0;
+  private TestData getTestData(@NotNull STest test,
+                               @NotNull final Set<String> buildTypeIds,
+                               @NotNull final SimpleObjectPool<RawData> rawDataPool,
+                               @NotNull final List<RawData> buffer) {
+    final long buildId = 0;       // TODO: proper buildId?
     buffer.clear();
 
+    collectRawData(test.getTestNameId(), buildId, buildTypeIds, rawDataPool, buffer);
+
+    if (buffer.size() <= 1) {
+      // Not enough data to analyze.
+      return null;
+    }
+    return runAlgorithms(test, buffer);
+  }
+
+  private void collectRawData(final long testId,
+                              final long buildId,
+                              @NotNull final Set<String> buildTypeIds,
+                              @NotNull final SimpleObjectPool<RawData> rawDataPool,
+                              @NotNull final List<RawData> buffer) {
     ((SQLRunnerEx) mySQLRunner).withDB(new DBAction<Object>() {
       public Object run(DBFunctions dbf) throws DBException {
         new GenericQuery<Object>(GET_TEST_DATA_SQL, new GenericQuery.ResultSetProcessor<Object>() {
@@ -166,13 +177,6 @@ public class TestsAnalyser {
         return null;
       }
     });
-
-    if (buffer.size() <= 1) {
-      // Not enough data to analyze.
-      return null;
-    }
-
-    return runAlgorithms(test, buffer);
   }
 
   private void algorithmsOnStart() {
@@ -186,7 +190,7 @@ public class TestsAnalyser {
     for (FinderAlgorithm algorithm : myAlgorithms) {
       Boolean checkResult = algorithm.checkTest(test, data);
       if (checkResult != null) {
-        return checkResult ? buildTestData(test, data) : null;
+        return checkResult ? buildTestData(test.getTestNameId(), test.getProjectId(), data) : null;
       }
     }
     return null;    // we're not sure about this test.
@@ -199,7 +203,9 @@ public class TestsAnalyser {
   }
 
   @NotNull
-  private TestData buildTestData(@NotNull STest test, @NotNull List<RawData> data) {
+  private TestData buildTestData(long testId,
+                                 @NotNull String projectId,
+                                 @NotNull List<RawData> data) {
     FailureRate failureRate;
     Map<String, FailureRate> buildTypeFailureRates = new HashMap<String, FailureRate>();
     Map<String, FailureRate> agentFailureRates = new HashMap<String, FailureRate>();
@@ -229,7 +235,27 @@ public class TestsAnalyser {
       }
     }
 
-    return new TestData(test, buildTypeFailureRates, agentFailureRates);
+    return new TestData(testId, projectId, buildTypeFailureRates, agentFailureRates);
+  }
+
+  @NotNull
+  private static SimpleObjectPool<RawData> getRawDataPool() {
+    return new SimpleObjectPool<RawData>(
+      new SimpleObjectPool.ObjectFactory<RawData>() {
+        @NotNull
+        public RawData create() {
+          return new RawData();
+        }
+      }, POOL_SIZE);
+  }
+
+  @NotNull
+  private static Set<String> getBuildTypeIds(@NotNull SProject project) {
+    Set<String> result = new HashSet<String>();
+    for (SBuildType buildType : project.getBuildTypes()) {
+      result.add(buildType.getBuildTypeId());
+    }
+    return result;
   }
 
   private static final String GET_TEST_DATA_SQL =
