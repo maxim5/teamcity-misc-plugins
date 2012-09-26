@@ -6,10 +6,7 @@ package jetbrains.buildServer.serverSide.flaky.web;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import jetbrains.buildServer.serverSide.BuildAgentManager;
-import jetbrains.buildServer.serverSide.ProjectManager;
-import jetbrains.buildServer.serverSide.SProject;
-import jetbrains.buildServer.serverSide.STestManager;
+import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgressManager;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder;
@@ -26,12 +23,14 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class TestsAnalysisTab extends ProjectTab {
+  private final SBuildServer myBuildServer;
   private final STestManager myTestManager;
   private final BuildAgentManager myAgentManager;
   private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
-  public TestsAnalysisTab(@NotNull PagePlaces pagePlaces,
+  public TestsAnalysisTab(@NotNull SBuildServer buildServer,
+                          @NotNull PagePlaces pagePlaces,
                           @NotNull ProjectManager projectManager,
                           @NotNull PluginDescriptor descriptor,
                           @NotNull STestManager testManager,
@@ -40,6 +39,7 @@ public class TestsAnalysisTab extends ProjectTab {
                           @NotNull TestAnalysisResultHolder holder) {
     super("analysis", "Tests analysis", pagePlaces, projectManager,
           descriptor.getPluginResourcesPath("/analysis.jsp"));
+    myBuildServer = buildServer;
     myTestManager = testManager;
     myAgentManager = agentManager;
     myProgressManager = progressManager;
@@ -60,7 +60,8 @@ public class TestsAnalysisTab extends ProjectTab {
                            @NotNull SProject project,
                            @Nullable SUser user) {
     TestAnalysisProgress progress = myProgressManager.getProgressFor(project);
-    TestsAnalysisBean bean = new TestsAnalysisBean(myTestManager, getProjectManager(), myAgentManager,
+    TestsAnalysisBean bean = new TestsAnalysisBean(myBuildServer, myTestManager,
+                                                   getProjectManager(), myAgentManager,
                                                    progress, myHolder, project);
     model.put("bean", bean);
   }

@@ -33,7 +33,8 @@ public class TestsAnalysisBean {
 
   private final TestAnalysisProgress myProgress;
 
-  public TestsAnalysisBean(@NotNull STestManager testManager,
+  public TestsAnalysisBean(@NotNull SBuildServer buildServer,
+                           @NotNull STestManager testManager,
                            @NotNull ProjectManager projectManager,
                            @NotNull BuildAgentManager agentManager,
                            @NotNull TestAnalysisProgress progress,
@@ -48,7 +49,7 @@ public class TestsAnalysisBean {
       myDetails = Collections.emptyMap();
     } else {
       myTestAnalysisResult = holder.getTestAnalysisResult(project);
-      myDetails = buildDetails(myTestAnalysisResult, projectManager, agentManager);
+      myDetails = buildDetails(myTestAnalysisResult, buildServer, projectManager, agentManager);
     }
   }
 
@@ -132,14 +133,15 @@ public class TestsAnalysisBean {
 
   @NotNull
   private static Map<Long, TestWebDetails> buildDetails(@NotNull TestAnalysisResult testAnalysisResult,
+                                                        @NotNull SBuildServer buildServer,
                                                         @NotNull ProjectManager projectManager,
                                                         @NotNull BuildAgentManager agentManager) {
     HashMap<Long, TestWebDetails> result = new HashMap<Long, TestWebDetails>();
     for (TestData data : testAnalysisResult.getFlakyTests()) {
-      result.put(data.getTestId(), new TestWebDetails(projectManager, agentManager, data));
+      result.put(data.getTestId(), new TestWebDetails(buildServer, projectManager, agentManager, data));
     }
     for (TestData data : testAnalysisResult.getAlwaysFailingTests()) {
-      result.put(data.getTestId(), new TestWebDetails(projectManager, agentManager, data));
+      result.put(data.getTestId(), new TestWebDetails(buildServer, projectManager, agentManager, data));
     }
     return result;
   }

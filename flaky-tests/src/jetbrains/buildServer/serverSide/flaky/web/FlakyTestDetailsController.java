@@ -77,7 +77,8 @@ public class FlakyTestDetailsController extends BaseController {
     if (testData == null) {
       testData = myTestsAnalyser.getTestData(longTestNameId, project);
     }
-    TestWebDetails testWebDetails = new TestWebDetails(myProjectManager, myBuildAgentManager, testData);
+    TestWebDetails testWebDetails = new TestWebDetails(myServer, myProjectManager,
+                                                       myBuildAgentManager, testData);
 
     ModelAndView modelAndView = new ModelAndView(JSP_PATH);
     modelAndView.getModel().put("testDetails", testWebDetails);

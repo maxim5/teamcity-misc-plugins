@@ -13,7 +13,7 @@
                             groupSelector="true"
                             id="${id}">
     <jsp:attribute name="afterToolbar">
-      <td class="flaky-details">Details</td>
+      <td class="env">Environment specifics</td>
       <td>&nbsp;</td>
     </jsp:attribute>
     <jsp:attribute name="testAfterName">
@@ -22,25 +22,16 @@
       <%--@elvariable id="details" type="jetbrains.buildServer.serverSide.flaky.web.TestWebDetails"--%>
 
       </td>
-      <td class="flaky-details">
-        <c:choose>
-          <c:when test="${details.testData.alwaysFailing}"></c:when>
-          <c:when test="${details.runInSingleBuildType}">
-            run only in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/>
-          </c:when>
-          <c:otherwise>
-            failed in
-            <bs:changeRequest key="buildTypes" value="${details.failedInBuildTypes}">
-              <jsp:include page="buildTypes.jsp"/>
-            </bs:changeRequest>
-
-            <c:if test="${fn:length(details.failedInBuildTypes) != fn:length(details.allBuildTypes)}">
-              <bs:changeRequest key="buildTypes" value="${details.allBuildTypes}">
-                (run in <jsp:include page="buildTypes.jsp"/>)
-              </bs:changeRequest>
-            </c:if>
-          </c:otherwise>
-        </c:choose>
+      <td class="env">
+        <c:if test="${details.failedOnlyInSingleBuildType or details.failedOnlyOnSingleAgent}">
+          fails only
+          <c:if test="${details.failedOnlyInSingleBuildType}">
+            in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/>
+          </c:if>
+          <c:if test="${details.failedOnlyOnSingleAgent}">
+            on <bs:agentDetailsLink agent="${details.failedOnAgents[0]}"/>
+          </c:if>
+        </c:if>
       </td>
       <td>
     </jsp:attribute>

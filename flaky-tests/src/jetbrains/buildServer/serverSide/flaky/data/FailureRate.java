@@ -10,7 +10,7 @@ import java.io.Serializable;
 * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
 * @since 8.0
 */
-public class FailureRate implements Serializable {
+public class FailureRate implements Serializable, Comparable<FailureRate> {
   private int myTotalRuns;
   private int myFailures;
 
@@ -41,5 +41,11 @@ public class FailureRate implements Serializable {
 
   public void incFailures() {
     ++myFailures;
+  }
+
+  public int compareTo(FailureRate that) {
+    Double thisRate = (1.0 * myFailures) / myTotalRuns;
+    Double thatRate = (1.0 * that.myFailures) / that.myTotalRuns;
+    return thatRate.compareTo(thisRate);
   }
 }
