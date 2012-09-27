@@ -3,6 +3,10 @@
 
 /><div class="test-details">
   <div>
+    [${testDetails.buildId}]
+  </div>
+
+  <div>
     <c:choose>
       <c:when test="${not testDetails.hasReason}">
       </c:when>

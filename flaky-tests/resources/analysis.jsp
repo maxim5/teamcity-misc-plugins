@@ -1,5 +1,6 @@
 <%@ include file="/include.jsp" %><%@
     taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
+    taglib prefix="tt" tagdir="/WEB-INF/tags/tests" %><%@
     taglib prefix="bs" tagdir="/WEB-INF/tags"
 %><jsp:useBean id="bean" type="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisBean" scope="request"
 
@@ -33,25 +34,58 @@
       <c:set var="allDetails" value="${bean.details}" scope="request"/>
 
       <c:if test="${bean.hasFlaky}">
-        <c:set var="title">Flaky tests: ${bean.flakyTestsSize}</c:set>
+        <c:set var="title">Environment-dependent tests: ${bean.flakyTestsSize}</c:set>
         <bs:_collapsibleBlock title="${title}" id="flakyTestsBlock">
-          <c:set var="groupBean" value="${bean.flakyTests}" scope="request"/>
-          <c:set var="id" value="flaky" scope="request"/>
-          <jsp:include page="analysedTestsGroup.jsp"/>
+          <bs:trimWhitespace
+            ><tt:testGroupWithActions groupedTestsBean="${bean.flakyTests}"
+                                      defaultOption="package"
+                                      groupSelector="true"
+                                      id="flaky">
+              <jsp:attribute name="afterToolbar">
+                <td class="env">Environment specifics</td>
+                <td>&nbsp;</td>
+              </jsp:attribute>
+              <jsp:attribute name="testAfterName">
+                <c:set var="test" value="${testBean.run.test}"/>
+                <c:set var="details" value="${allDetails[test.testNameId]}"/>
+                <%--@elvariable id="details" type="jetbrains.buildServer.serverSide.flaky.web.TestWebDetails"--%>
+
+                </td>
+                <td class="env">
+                  <c:if test="${details.failedOnlyInSingleBuildType or details.failedOnlyOnSingleAgent}">
+                    fails only
+                    <c:if test="${details.failedOnlyInSingleBuildType}">
+                      in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/>
+                    </c:if>
+                    <c:if test="${details.failedOnlyOnSingleAgent}">
+                      on <bs:agentDetailsLink agent="${details.failedOnAgents[0]}"/>
+                    </c:if>
+                  </c:if>
+                </td>
+                <td>
+              </jsp:attribute>
+             </tt:testGroupWithActions
+          ></bs:trimWhitespace>
         </bs:_collapsibleBlock>
       </c:if>
 
       <c:if test="${bean.hasAlwaysFailing}">
         <c:set var="title">Tests that always fail: ${bean.alwaysFailingTestsSize}</c:set>
         <bs:_collapsibleBlock title="${title}" id="alwaysFailingTestsBlock" collapsedByDefault="true">
-          <div>
-            The tests that have never been successful (typically <code>setUp</code> and <code>tearDown</code> methods).
-          </div>
-          <c:set var="groupBean" value="${bean.alwaysFailingTests}" scope="request"/>
-          <c:set var="id" value="always" scope="request"/>
-          <jsp:include page="analysedTestsGroup.jsp"/>
+          <tt:testGroupWithActions groupedTestsBean="${bean.alwaysFailingTests}"
+                                         defaultOption="package"
+                                         groupSelector="true"
+                                         id="always">
+            <jsp:attribute name="belowToolbar">
+              <div>
+                The tests that have never been successful (typically <code>setUp</code> and <code>tearDown</code> methods).
+              </div>
+            </jsp:attribute>
+          </tt:testGroupWithActions>
         </bs:_collapsibleBlock>
       </c:if>
     </c:when>
   </c:choose>
+
+  <jsp:include page="settingsDialog.jsp"/>
 </div>

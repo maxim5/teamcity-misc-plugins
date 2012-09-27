@@ -30,6 +30,9 @@ import org.jetbrains.annotations.Nullable;
 public class TestsAnalyser {
   private static final int BUFFER_SIZE = 1024;
   private static final int POOL_SIZE = 1024;
+  private static final float FAILURE_RATE = 0.01f;
+  private static final int EURISTIC_MIN_FAILURES_NUMBER = 10;
+  private static final int MIN_RUNS_NUMBER = 1;
 
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
@@ -53,7 +56,8 @@ public class TestsAnalyser {
     myAlgorithms.add(new ModificationBasedAlgorithm(buildServer));
   }
 
-  public void analyseTestsInProject(@NotNull SProject project) {
+  public void analyseTestsInProject(@NotNull SProject project,
+                                    @NotNull TestAnalysisSettings settings) {
     TestAnalysisProgress progress = myProgressManager.getProgressFor(project);
     if (!progress.getLock().compareAndSet(false, true)) {
       return;
@@ -73,12 +77,16 @@ public class TestsAnalyser {
 
       try {
         List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);    // reuse the allocated buffer
-        Set<String> buildTypeIds = getBuildTypeIds(project);
+        Set<String> buildTypeIds = getBuildTypeIds(project, settings);
 
         // Collecting failure statistics...
-        List<TestFailureRate> allFailingTests = myFailuresStatistics.getFailingTests(project, 0.01f);
+        List<TestFailureRate> allFailingTests =
+          myFailuresStatistics.getFailingTests(project, FAILURE_RATE);
         progress.setTotalSize(allFailingTests.size());
         result.setTotalTests(allFailingTests.size());
+
+        // Calculating the start build...
+        long buildId = findBuildIdForTest(null, settings.getAnalyseTimePeriod());
 
         // Analysis...
         progress.setCurrentStep("Analysing tests failures...");
@@ -88,10 +96,11 @@ public class TestsAnalyser {
           int successCount = testFailureRate.getSuccessCount();
           int totalCount = failureCount + successCount;
 
-          if (failureCount > 0 && successCount == 0) {
+          if (settings.isUseEuristicToFilterAlwaysFailingTests() &&
+              failureCount >= EURISTIC_MIN_FAILURES_NUMBER && successCount == 0) {
             testDataList.add(new TestData(test));
-          } else if (totalCount > 1) {
-            TestData testData = getTestData(test, buildTypeIds, rawDataPool, buffer);
+          } else if (totalCount > MIN_RUNS_NUMBER) {
+            TestData testData = getTestData(test, buildId, buildTypeIds, rawDataPool, buffer);
             if (testData != null) {
               testDataList.add(testData);
             }
@@ -104,6 +113,7 @@ public class TestsAnalyser {
         algorithmsOnFinish();
         result.setFinishDate(new Date());
         result.setTests(testDataList);
+        result.setSettings(settings);
         myHolder.putTestAnalysisResult(project, result);
       }
     } finally {
@@ -113,21 +123,24 @@ public class TestsAnalyser {
   }
 
   @NotNull
-  public TestData getTestData(long testId, @NotNull SProject project) {
+  public TestData getTestData(long testId, @NotNull SProject project,
+                              @NotNull TestAnalysisResult lastResult) {
     List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);
-    Set<String> buildTypeIds = getBuildTypeIds(project);
+    TestAnalysisSettings settings = lastResult.getSettings();
+    Set<String> buildTypeIds = getBuildTypeIds(project, settings);
     SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
-    int buildId = 0;
+    long buildId = findBuildIdForTest(lastResult.getStartDate(),
+                                      settings.getAnalyseTimePeriod());
     collectRawData(testId, buildId, buildTypeIds, rawDataPool, buffer);
-    return buildTestData(testId, project.getProjectId(), null, buffer);
+    return buildTestData(testId, project.getProjectId(), buildId, null, buffer);
   }
 
   @Nullable
   private TestData getTestData(@NotNull STest test,
+                               long buildId,
                                @NotNull final Set<String> buildTypeIds,
                                @NotNull final SimpleObjectPool<RawData> rawDataPool,
                                @NotNull final List<RawData> buffer) {
-    final long buildId = 0;       // TODO: proper buildId?
     buffer.clear();
 
     collectRawData(test.getTestNameId(), buildId, buildTypeIds, rawDataPool, buffer);
@@ -136,7 +149,7 @@ public class TestsAnalyser {
       // Not enough data to analyze.
       return null;
     }
-    return runAlgorithms(test, buffer);
+    return runAlgorithms(test, buildId, buffer);
   }
 
   private void collectRawData(final long testId,
@@ -184,11 +197,11 @@ public class TestsAnalyser {
   }
 
   @Nullable
-  private TestData runAlgorithms(@NotNull STest test, @NotNull List<RawData> data) {
+  private TestData runAlgorithms(@NotNull STest test, long buildId, @NotNull List<RawData> data) {
     for (CheckAlgorithm algorithm : myAlgorithms) {
       CheckResult checkResult = algorithm.checkTest(test, data);
       if (checkResult != null && !checkResult.getType().isOrdinary()) {
-        return buildTestData(test.getTestNameId(), test.getProjectId(), checkResult.getReason(), data);
+        return buildTestData(test.getTestNameId(), test.getProjectId(), buildId, checkResult, data);
       }
     }
     return null;    // we're not sure about this test.
@@ -203,7 +216,8 @@ public class TestsAnalyser {
   @NotNull
   private TestData buildTestData(long testId,
                                  @NotNull String projectId,
-                                 @Nullable Reason reason,
+                                 long buildId,
+                                 @Nullable CheckResult checkResult,
                                  @NotNull List<RawData> data) {
     FailureRate failureRate;
     Map<String, FailureRate> buildTypeFailureRates = new HashMap<String, FailureRate>();
@@ -234,7 +248,25 @@ public class TestsAnalyser {
       }
     }
 
-    return new TestData(testId, projectId, buildTypeFailureRates, agentFailureRates, reason);
+    Type type = checkResult != null ? checkResult.getType() : null;
+    Reason reason = checkResult != null ? checkResult.getReason() : null;
+    return new TestData(testId, projectId,
+                        buildTypeFailureRates, agentFailureRates,
+                        buildId, type, reason);
+  }
+
+  private long findBuildIdForTest(@Nullable Date startDate, long period) {
+    if (period < 0) {
+      return 0;
+    }
+
+    if (startDate == null) {
+      startDate = new Date();
+    }
+    long timstamp = startDate.getTime() - period;
+    return new GenericQuery<Long>(GET_FIRST_BUILD_ID_SQL,
+                                  new GenericQuery.ReturnSingle<Long>())
+           .execute(mySQLRunner, timstamp);
   }
 
   @NotNull
@@ -249,11 +281,13 @@ public class TestsAnalyser {
   }
 
   @NotNull
-  private static Set<String> getBuildTypeIds(@NotNull SProject project) {
+  private static Set<String> getBuildTypeIds(@NotNull SProject project,
+                                             @NotNull TestAnalysisSettings settings) {
     Set<String> result = new HashSet<String>();
     for (SBuildType buildType : project.getBuildTypes()) {
       result.add(buildType.getBuildTypeId());
     }
+    result.removeAll(settings.getExcludeBuildTypes());
     return result;
   }
 
@@ -268,4 +302,8 @@ public class TestsAnalyser {
     "                       and h.build_id is not null and h.build_id >= ?              \n" +
     "    where ti.build_id is not null and ti.build_id >= ?                             \n" +
     "      and ti.test_name_id = ? and ti.status != 0                                   \n";
+
+  private static final String GET_FIRST_BUILD_ID_SQL =
+    "select min(build_id) from history                                                  \n" +
+    "    where build_start_time_server > ?                                              \n";
 }

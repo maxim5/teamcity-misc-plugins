@@ -9,10 +9,7 @@ import jetbrains.buildServer.controllers.investigate.DummyTestRunImpl;
 import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.responsibility.InvestigationTestRunsHolder;
 import jetbrains.buildServer.serverSide.*;
-import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgress;
-import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResult;
-import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder;
-import jetbrains.buildServer.serverSide.flaky.data.TestData;
+import jetbrains.buildServer.serverSide.flaky.data.*;
 import jetbrains.buildServer.web.problems.GroupedTestsBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,6 +67,17 @@ public class TestsAnalysisBean {
     assert finishDate != null;
     long duration = (finishDate.getTime() - startDate.getTime()) / 1000;
     return duration + " seconds";
+  }
+
+  @NotNull
+  public Map<SBuildType, Boolean> getBuildTypeSettings() {
+    TestAnalysisSettings settings = myTestAnalysisResult.getSettings();
+    Set<String> excluded = new HashSet<String>(settings.getExcludeBuildTypes());
+    TreeMap<SBuildType, Boolean> result = new TreeMap<SBuildType, Boolean>();
+    for (SBuildType buildType : myProject.getBuildTypes()) {
+      result.put(buildType, excluded.contains(buildType.getBuildTypeId()));
+    }
+    return result;
   }
 
   @NotNull

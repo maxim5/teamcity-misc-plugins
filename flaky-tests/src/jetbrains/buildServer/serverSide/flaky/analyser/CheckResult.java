@@ -5,6 +5,7 @@
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
 import jetbrains.buildServer.serverSide.flaky.data.Reason;
+import jetbrains.buildServer.serverSide.flaky.data.Type;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,16 +16,6 @@ import org.jetbrains.annotations.Nullable;
 public class CheckResult {
   public static final CheckResult ORDINARY_RESULT = new CheckResult(Type.ORDINARY);
   public static final CheckResult ALWAYS_FAILING_RESULT = new CheckResult(Type.ALWAYS_FAILING);
-
-  public enum Type {
-    ORDINARY,
-    FLAKY,
-    ALWAYS_FAILING;
-
-    public boolean isOrdinary() {
-      return this == ORDINARY;
-    }
-  }
 
   private final Type myType;
   private final Reason myReason;
