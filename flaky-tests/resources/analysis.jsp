@@ -4,7 +4,7 @@
     taglib prefix="bs" tagdir="/WEB-INF/tags"
 %><jsp:useBean id="bean" type="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisBean" scope="request"
 
-/><div id="flaky">
+/><bs:refreshable containerId="flaky" pageUrl="${pageUrl}">
   <c:choose>
     <c:when test="${bean.inProgress}">
       <forms:progressRing className="progressRingInline"/> ${bean.progress.currentStep}
@@ -88,4 +88,4 @@
   </c:choose>
 
   <jsp:include page="settingsDialog.jsp"/>
-</div>
+</bs:refreshable>
