@@ -6,6 +6,7 @@ package jetbrains.buildServer.serverSide.flaky.analyser;
 
 import java.util.List;
 import jetbrains.buildServer.serverSide.STest;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public interface CheckAlgorithm {
-  void onStart();
+  void onStart(@NotNull TestAnalysisSettings settings);
 
   void onFinish();
 

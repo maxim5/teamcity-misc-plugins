@@ -12,6 +12,7 @@ import jetbrains.buildServer.serverSide.SBuild;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.serverSide.STest;
 import jetbrains.buildServer.serverSide.flaky.data.Reason;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings;
 import jetbrains.buildServer.serverSide.flaky.data.Type;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class ModificationBasedAlgorithm implements CheckAlgorithm {
     myBuildServer = buildServer;
   }
 
-  public void onStart() {
+  public void onStart(@NotNull TestAnalysisSettings settings) {
     myStatusMap = new HashMap<Long, Integer>();
   }
 

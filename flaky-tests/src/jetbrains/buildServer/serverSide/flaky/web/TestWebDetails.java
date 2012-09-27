@@ -9,6 +9,7 @@ import java.util.*;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.flaky.analyser.BuildWithoutChangesReason;
 import jetbrains.buildServer.serverSide.flaky.analyser.BuildsOnSameModificationReason;
+import jetbrains.buildServer.serverSide.flaky.analyser.SuspiciousFailureStatisticsReason;
 import jetbrains.buildServer.serverSide.flaky.data.FailureRate;
 import jetbrains.buildServer.serverSide.flaky.data.Reason;
 import jetbrains.buildServer.serverSide.flaky.data.TestData;
@@ -161,5 +162,17 @@ public class TestWebDetails {
     SBuild build = myBuildServer.findBuildInstanceById(buildId);
     assert build != null;
     return build;
+  }
+
+  public boolean isSuspiciousStatisticsReason() {
+    return myTestData.getReason() instanceof SuspiciousFailureStatisticsReason;
+  }
+
+  @NotNull
+  public Pair<Integer, Integer> getSuspiciousStatistics() {
+    Reason reason = myTestData.getReason();
+    assert reason instanceof SuspiciousFailureStatisticsReason;
+    return new Pair<Integer, Integer>(((SuspiciousFailureStatisticsReason)reason).getTotalLength(),
+                                      ((SuspiciousFailureStatisticsReason)reason).getNumber());
   }
 }

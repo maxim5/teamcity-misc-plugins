@@ -11,6 +11,7 @@ package jetbrains.buildServer.serverSide.flaky.data;
 public enum Type {
   ORDINARY,
   FLAKY,
+  SUSPICIOUS,
   ALWAYS_FAILING;
 
   public boolean isOrdinary() {
@@ -19,6 +20,10 @@ public enum Type {
 
   public boolean isFlaky() {
     return this == FLAKY;
+  }
+
+  public boolean isSuspicious() {
+    return this == SUSPICIOUS;
   }
 
   public boolean isAlwaysFailing() {
