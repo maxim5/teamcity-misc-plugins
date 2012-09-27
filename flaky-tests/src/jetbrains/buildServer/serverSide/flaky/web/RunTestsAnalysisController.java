@@ -80,9 +80,8 @@ public class RunTestsAnalysisController extends BaseController {
       }
     }
 
-    boolean analyseAllTests = "true".equals(request.getParameter("analyseAllTests"));
     boolean speedUpAlwaysFailing = "true".equals(request.getParameter("speedUpAlwaysFailing"));
 
-    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriod, analyseAllTests, speedUpAlwaysFailing);
+    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriod, speedUpAlwaysFailing);
   }
 }

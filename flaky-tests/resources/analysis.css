@@ -15,7 +15,7 @@
 /* Test details */
 
 .test-details {
-  margin: 1em 0 1em 2.3em;
+  margin: 0.5em 0 1em 2.3em;
 }
 
 .test-details table {
@@ -25,7 +25,19 @@
 
 .test-details table.modificationBuilds {
   width: 80%;
-  margin: 0.4em 0 2em 0;
+  margin: 0.4em 0 0 0;
+}
+
+.lt1200 .test-details table.modificationBuilds {
+  width: 100%;
+}
+
+.test-details .reason {
+  margin-bottom: 1.5em;
+}
+
+.test-details .stats {
+  margin-bottom: 0.4em;
 }
 
 .test-details table.modificationBuilds tr {
@@ -34,7 +46,7 @@
 
 .test-details table.modificationBuilds td {
   padding-top: 2px;
-  padding-bottom: 2px;
+  padding-bottom: 1px;
   border: none;
   vertical-align: top;
   line-height: 1em;

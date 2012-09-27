@@ -16,20 +16,17 @@ import org.jetbrains.annotations.NotNull;
 public class TestAnalysisSettings implements Serializable {
   public static final int DEFAULT_PERIOD = 5 * 24 * 60 * 60 * 1000;
   public static final TestAnalysisSettings DEFAULT_SETTINGS =
-    new TestAnalysisSettings(Collections.<String>emptyList(), DEFAULT_PERIOD, false, true);
+    new TestAnalysisSettings(Collections.<String>emptyList(), DEFAULT_PERIOD, true);
 
   private final Collection<String> myExcludeBuildTypes;
   private final long myAnalyseTimePeriod;
-  private final boolean myCompleteAnalysis;
   private final boolean myUseEuristicToFilterAlwaysFailingTests;
 
   public TestAnalysisSettings(@NotNull Collection<String> excludeBuildTypes,
                               long analyseTimePeriod,
-                              boolean analyseAllTests,
                               boolean useEuristicToFilterAlwaysFailingTests) {
     myExcludeBuildTypes = excludeBuildTypes;
     myAnalyseTimePeriod = analyseTimePeriod;
-    myCompleteAnalysis = analyseAllTests;
     myUseEuristicToFilterAlwaysFailingTests = useEuristicToFilterAlwaysFailingTests;
   }
 
@@ -40,10 +37,6 @@ public class TestAnalysisSettings implements Serializable {
 
   public long getAnalyseTimePeriod() {
     return myAnalyseTimePeriod;
-  }
-
-  public boolean isCompleteAnalysis() {
-    return myCompleteAnalysis;
   }
 
   public boolean isUseEuristicToFilterAlwaysFailingTests() {
