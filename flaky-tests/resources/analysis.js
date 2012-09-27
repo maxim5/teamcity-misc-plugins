@@ -15,7 +15,7 @@ BS.Flaky = {
       parameters: parameters,
       onComplete: function() {
         progressIcon.hide();
-        BS.reload();
+        $("flaky").refresh();
       }
     });
     return false;
@@ -23,7 +23,7 @@ BS.Flaky = {
 
   scheduleReload: function() {
     setTimeout(function() {
-      BS.reload();
+      $("flaky").refresh();
     }, 3000);
   }
 };
