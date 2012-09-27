@@ -52,6 +52,7 @@ public class TestsAnalyser {
     myAlgorithms = new ArrayList<CheckAlgorithm>();
     myAlgorithms.add(new SimpleStatusAlgorithm());
     myAlgorithms.add(new ModificationBasedAlgorithm(buildServer));
+    myAlgorithms.add(new StatisticAnalysisAlgorithm());               // TODO: concurrency bug (AlgorithmHolder)
   }
 
   public void analyseTestsInProject(@NotNull SProject project,
@@ -71,7 +72,7 @@ public class TestsAnalyser {
       progress.setCurrentStep("Preparing data...");
       SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
       List<TestData> testDataList = new ArrayList<TestData>();
-      algorithmsOnStart();
+      algorithmsOnStart(settings);
 
       try {
         List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);    // reuse the allocated buffer
@@ -188,9 +189,9 @@ public class TestsAnalyser {
     });
   }
 
-  private void algorithmsOnStart() {
+  private void algorithmsOnStart(@NotNull TestAnalysisSettings settings) {
     for (CheckAlgorithm algorithm : myAlgorithms) {
-      algorithm.onStart();
+      algorithm.onStart(settings);
     }
   }
 
@@ -263,7 +264,7 @@ public class TestsAnalyser {
     }
     long timstamp = startDate.getTime() - period;
     return new GenericQuery<Long>(GET_FIRST_BUILD_ID_SQL,
-                                  new GenericQuery.ReturnSingle<Long>())
+                                  new GenericQuery.ReturnSingle<Long>())       // TODO: NPE
            .execute(mySQLRunner, timstamp);
   }
 
@@ -299,7 +300,8 @@ public class TestsAnalyser {
     "    join history h on h.build_id=ti.build_id                                       \n" +
     "                       and h.build_id is not null and h.build_id >= ?              \n" +
     "    where ti.build_id is not null and ti.build_id >= ?                             \n" +
-    "      and ti.test_name_id = ? and ti.status != 0                                   \n";
+    "      and ti.test_name_id = ? and ti.status != 0                                   \n" +
+    "    order by bs.modification_id                                                    \n";
 
   private static final String GET_FIRST_BUILD_ID_SQL =
     "select min(build_id) from history                                                  \n" +

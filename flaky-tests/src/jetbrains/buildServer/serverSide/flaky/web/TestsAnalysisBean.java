@@ -78,11 +78,15 @@ public class TestsAnalysisBean {
   }
 
   public boolean isHasData() {
-    return isHasFlaky() || isHasAlwaysFailing();
+    return isHasFlaky() || isHasSuspicious() || isHasAlwaysFailing();
   }
 
   public boolean isHasFlaky() {
     return !myTestAnalysisResult.getFlakyTests().isEmpty();
+  }
+
+  public boolean isHasSuspicious() {
+    return !myTestAnalysisResult.getSuspiciousTests().isEmpty();
   }
 
   public boolean isHasAlwaysFailing() {
@@ -93,6 +97,10 @@ public class TestsAnalysisBean {
     return myTestAnalysisResult.getFlakyTests().size();
   }
 
+  public int getSuspiciousTestsSize() {
+    return myTestAnalysisResult.getSuspiciousTests().size();
+  }
+
   public int getAlwaysFailingTestsSize() {
     return myTestAnalysisResult.getAlwaysFailingTests().size();
   }
@@ -100,6 +108,12 @@ public class TestsAnalysisBean {
   @NotNull
   public GroupedTestsBean getFlakyTests() {
     List<STestRun> testRuns = getTestRuns(myTestAnalysisResult.getFlakyTests());
+    return GroupedTestsBean.createForTests(testRuns);
+  }
+
+  @NotNull
+  public GroupedTestsBean getSuspiciousTests() {
+    List<STestRun> testRuns = getTestRuns(myTestAnalysisResult.getSuspiciousTests());
     return GroupedTestsBean.createForTests(testRuns);
   }
 
@@ -138,6 +152,9 @@ public class TestsAnalysisBean {
                                                         @NotNull BuildAgentManager agentManager) {
     HashMap<Long, TestWebDetails> result = new HashMap<Long, TestWebDetails>();
     for (TestData data : testAnalysisResult.getFlakyTests()) {
+      result.put(data.getTestId(), new TestWebDetails(buildServer, projectManager, agentManager, data));
+    }
+    for (TestData data : testAnalysisResult.getSuspiciousTests()) {
       result.put(data.getTestId(), new TestWebDetails(buildServer, projectManager, agentManager, data));
     }
     for (TestData data : testAnalysisResult.getAlwaysFailingTests()) {

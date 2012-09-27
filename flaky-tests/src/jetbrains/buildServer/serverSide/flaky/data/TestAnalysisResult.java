@@ -20,6 +20,7 @@ public class TestAnalysisResult implements Serializable {
   public static final TestAnalysisResult EMPTY_FLAKY_TESTS = new TestAnalysisResult();
 
   private List<TestData> myFlakyTests = Collections.emptyList();
+  private List<TestData> mySuspiciousTests = Collections.emptyList();
   private List<TestData> myAlwaysFailingTests = Collections.emptyList();
 
   private TestAnalysisSettings mySettings = TestAnalysisSettings.DEFAULT_SETTINGS;
@@ -33,6 +34,11 @@ public class TestAnalysisResult implements Serializable {
   @NotNull
   public List<TestData> getFlakyTests() {
     return myFlakyTests;
+  }
+
+  @NotNull
+  public List<TestData> getSuspiciousTests() {
+    return mySuspiciousTests;
   }
 
   @NotNull
@@ -66,6 +72,11 @@ public class TestAnalysisResult implements Serializable {
         return testData;
       }
     }
+    for (TestData testData : mySuspiciousTests) {
+      if (testId == testData.getTestId()) {
+        return testData;
+      }
+    }
     for (TestData testData : myAlwaysFailingTests) {
       if (testId == testData.getTestId()) {
         return testData;
@@ -76,12 +87,18 @@ public class TestAnalysisResult implements Serializable {
 
   public void setTests(@NotNull List<TestData> allTests) {
     myFlakyTests = new ArrayList<TestData>();
+    mySuspiciousTests = new ArrayList<TestData>();
     myAlwaysFailingTests = new ArrayList<TestData>();
     for (TestData test : allTests) {
-      if (test.getType().isAlwaysFailing()) {
+      Type type = test.getType();
+      if (type.isAlwaysFailing()) {
         myAlwaysFailingTests.add(test);
-      } else {
+      } else if (type.isSuspicious()) {
+        mySuspiciousTests.add(test);
+      } else if (type.isFlaky()) {
         myFlakyTests.add(test);
+      } else {
+        throw new RuntimeException("Unexpected type: " + type);
       }
     }
   }

@@ -31,8 +31,6 @@
     <c:when test="${bean.hasData}">
       <jsp:include page="printResultShort.jsp"/>
 
-      <c:set var="allDetails" value="${bean.details}" scope="request"/>
-
       <c:if test="${bean.hasFlaky}">
         <c:set var="title">Environment-dependent tests: ${bean.flakyTestsSize}</c:set>
         <bs:_collapsibleBlock title="${title}" id="flakyTestsBlock">
@@ -46,26 +44,32 @@
                 <td>&nbsp;</td>
               </jsp:attribute>
               <jsp:attribute name="testAfterName">
-                <c:set var="test" value="${testBean.run.test}"/>
-                <c:set var="details" value="${allDetails[test.testNameId]}"/>
-                <%--@elvariable id="details" type="jetbrains.buildServer.serverSide.flaky.web.TestWebDetails"--%>
-
-                </td>
-                <td class="env">
-                  <c:if test="${details.failedOnlyInSingleBuildType or details.failedOnlyOnSingleAgent}">
-                    fails only
-                    <c:if test="${details.failedOnlyInSingleBuildType}">
-                      in <bs:buildTypeLink buildType="${details.failedInBuildTypes[0]}"/>
-                    </c:if>
-                    <c:if test="${details.failedOnlyOnSingleAgent}">
-                      on <bs:agentDetailsLink agent="${details.failedOnAgents[0]}"/>
-                    </c:if>
-                  </c:if>
-                </td>
-                <td>
+                <bs:changeRequest key="testBean" value="${testBean}">
+                  <jsp:include page="environmentDetails.jsp"/>
+                </bs:changeRequest>
               </jsp:attribute>
              </tt:testGroupWithActions
           ></bs:trimWhitespace>
+        </bs:_collapsibleBlock>
+      </c:if>
+
+      <c:if test="${bean.hasSuspicious}">
+        <c:set var="title">Suspicious tests: ${bean.suspiciousTestsSize}</c:set>
+        <bs:_collapsibleBlock title="${title}" id="suspiciousTestsBlock" collapsedByDefault="true">
+          <tt:testGroupWithActions groupedTestsBean="${bean.suspiciousTests}"
+                                   defaultOption="package"
+                                   groupSelector="true"
+                                   id="suspicious">
+            <jsp:attribute name="afterToolbar">
+              <td class="env">Environment specifics</td>
+              <td>&nbsp;</td>
+            </jsp:attribute>
+            <jsp:attribute name="testAfterName">
+              <bs:changeRequest key="testBean" value="${testBean}">
+                <jsp:include page="environmentDetails.jsp"/>
+              </bs:changeRequest>
+            </jsp:attribute>
+          </tt:testGroupWithActions>
         </bs:_collapsibleBlock>
       </c:if>
 
