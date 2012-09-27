@@ -90,4 +90,8 @@
       <td></td>
     </tr>
   </table>
+
+  <c:url var="testDetailUrl"
+         value="/project.html?tab=testDetails&testNameId=${testDetails.testData.testId}&projectId=${testDetails.testData.projectId}"/>
+  <a href="${testDetailUrl}" title="View test details">Complete test details &raquo;</a>
 </div>
