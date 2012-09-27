@@ -77,11 +77,6 @@ public class TestsAnalysisBean {
     return result;
   }
 
-  @NotNull
-  public SProject getProject() {
-    return myProject;
-  }
-
   public boolean isHasData() {
     return isHasFlaky() || isHasAlwaysFailing();
   }
