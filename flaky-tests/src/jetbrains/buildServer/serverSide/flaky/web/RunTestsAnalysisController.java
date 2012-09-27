@@ -4,6 +4,8 @@
  */
 package jetbrains.buildServer.serverSide.flaky.web;
 
+import java.util.Collections;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import jetbrains.buildServer.controllers.BaseController;
@@ -11,6 +13,8 @@ import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.flaky.analyser.TestsAnalyser;
+import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,12 +52,37 @@ public class RunTestsAnalysisController extends BaseController {
       return null;
     }
 
+    final TestAnalysisSettings settings = getSettingsFromRequest(request);
+
     new Thread(new Runnable() {
       public void run() {
-        myAnalyser.analyseTestsInProject(project);
+        myAnalyser.analyseTestsInProject(project, settings);
       }
     }, "Tests analyser").start();
 
     return null;
+  }
+
+  @NotNull
+  private static TestAnalysisSettings getSettingsFromRequest(@NotNull HttpServletRequest request) {
+    String excludeBuildTypesParam = request.getParameter("excludeBuildTypes");
+    List<String> excludeBuildTypes = (excludeBuildTypesParam != null) ?
+                                       StringUtil.split(excludeBuildTypesParam, true, ':') :
+                                       Collections.<String>emptyList();
+
+    String periodParam = request.getParameter("period");
+    long analyseTimePeriod = -1;
+    if (periodParam != null) {
+      try {
+        analyseTimePeriod = Long.parseLong(periodParam);
+      } catch (NumberFormatException e) {
+        // ignore
+      }
+    }
+
+    boolean analyseAllTests = "true".equals(request.getParameter("analyseAllTests"));
+    boolean speedUpAlwaysFailing = "true".equals(request.getParameter("speedUpAlwaysFailing"));
+
+    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriod, analyseAllTests, speedUpAlwaysFailing);
   }
 }

@@ -92,14 +92,6 @@ public class TestWebDetails {
     return myAllAgents.size() > 1 && myFailedOnAgents.size() == 1;
   }
 
-  /*public boolean isRunInSingleBuildType() {
-    return myTestData.getBuildTypeFailureRates().size() == 1;
-  }
-
-  public boolean isRunOnSingleAgent() {
-    return myTestData.getAgentFailureRates().size() == 1;
-  }*/
-
   @NotNull
   public List<SBuildType> getFailedInBuildTypes() {
     return myFailedInBuildTypes;
@@ -118,6 +110,11 @@ public class TestWebDetails {
   @NotNull
   public List<SBuildAgent> getFailedOnAgents() {
     return myFailedOnAgents;
+  }
+
+  //TODO
+  public long getBuildId() {
+    return myTestData.getFromBuildId();
   }
 
   public boolean isHasReason() {

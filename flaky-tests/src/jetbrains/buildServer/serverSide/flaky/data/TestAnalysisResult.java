@@ -22,6 +22,7 @@ public class TestAnalysisResult implements Serializable {
   private List<TestData> myFlakyTests = Collections.emptyList();
   private List<TestData> myAlwaysFailingTests = Collections.emptyList();
 
+  private TestAnalysisSettings mySettings = TestAnalysisSettings.DEFAULT_SETTINGS;
   private Date myStartDate = null;
   private Date myFinishDate = null;
   private int myTotalTests = 0;
@@ -39,6 +40,11 @@ public class TestAnalysisResult implements Serializable {
     return myAlwaysFailingTests;
   }
 
+  @NotNull
+  public TestAnalysisSettings getSettings() {
+    return mySettings;
+  }
+
   @Nullable
   public Date getStartDate() {
     return myStartDate;
@@ -54,8 +60,13 @@ public class TestAnalysisResult implements Serializable {
   }
 
   @Nullable
-  public TestData findFlakyTest(long testId) {
+  public TestData findTest(long testId) {
     for (TestData testData : myFlakyTests) {
+      if (testId == testData.getTestId()) {
+        return testData;
+      }
+    }
+    for (TestData testData : myAlwaysFailingTests) {
       if (testId == testData.getTestId()) {
         return testData;
       }
@@ -67,12 +78,16 @@ public class TestAnalysisResult implements Serializable {
     myFlakyTests = new ArrayList<TestData>();
     myAlwaysFailingTests = new ArrayList<TestData>();
     for (TestData test : allTests) {
-      if (test.isAlwaysFailing()) {
+      if (test.getType().isAlwaysFailing()) {
         myAlwaysFailingTests.add(test);
       } else {
         myFlakyTests.add(test);
       }
     }
+  }
+
+  public void setSettings(@NotNull TestAnalysisSettings settings) {
+    mySettings = settings;
   }
 
   public void setStartDate(@NotNull Date startDate) {

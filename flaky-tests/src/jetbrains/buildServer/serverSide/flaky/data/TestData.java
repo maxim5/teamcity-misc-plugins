@@ -19,21 +19,25 @@ import org.jetbrains.annotations.Nullable;
 public class TestData implements Serializable {
   private final long myTestId;
   private final String myProjectId;
-  private final boolean myAlwaysFailing;
   private final Map<String, FailureRate> myBuildTypeFailureRates;
   private final Map<String, FailureRate> myAgentFailureRates;
+  private final long myFromBuildId;
+  private final Type myType;
   private final Reason myReason;
 
   public TestData(long testId,
                   @NotNull String projectId,
                   @NotNull Map<String, FailureRate> buildTypeFailureRates,
                   @NotNull Map<String, FailureRate> agentFailureRates,
+                  long fromBuildId,
+                  @Nullable Type type,
                   @Nullable Reason reason) {
     myProjectId = projectId;
     myTestId = testId;
     myBuildTypeFailureRates = buildTypeFailureRates;
     myAgentFailureRates = agentFailureRates;
-    myAlwaysFailing = calculareAlwaysFailing(buildTypeFailureRates.values());
+    myFromBuildId = fromBuildId;
+    myType = type != null ? type : getType(buildTypeFailureRates.values());
     myReason = reason;
   }
 
@@ -41,7 +45,7 @@ public class TestData implements Serializable {
     this(testId, projectId,
          Collections.<String, FailureRate>emptyMap(),
          Collections.<String, FailureRate>emptyMap(),
-         null);
+         0, null, null);
   }
 
   public TestData(@NotNull STest test) {
@@ -52,7 +56,8 @@ public class TestData implements Serializable {
                   @NotNull Map<String, FailureRate> buildTypeFailureRates,
                   @NotNull Map<String, FailureRate> agentFailureRates) {
     this(test.getTestNameId(), test.getProjectId(),
-         buildTypeFailureRates, agentFailureRates, null);
+         buildTypeFailureRates, agentFailureRates,
+         0, null, null);
   }
 
   public long getTestId() {
@@ -62,10 +67,6 @@ public class TestData implements Serializable {
   @NotNull
   public String getProjectId() {
     return myProjectId;
-  }
-
-  public boolean isAlwaysFailing() {
-    return myAlwaysFailing;
   }
 
   @NotNull
@@ -78,17 +79,27 @@ public class TestData implements Serializable {
     return myAgentFailureRates;
   }
 
+  public long getFromBuildId() {
+    return myFromBuildId;
+  }
+
+  @NotNull
+  public Type getType() {
+    return myType;
+  }
+
   @Nullable
   public Reason getReason() {
     return myReason;
   }
 
-  private static boolean calculareAlwaysFailing(@NotNull Collection<FailureRate> failureRates) {
+  @NotNull
+  private static Type getType(@NotNull Collection<FailureRate> failureRates) {
     for (FailureRate failureRate : failureRates) {
       if (!failureRate.isAllFailures()) {
-        return false;
+        return Type.FLAKY;
       }
     }
-    return true;
+    return Type.ALWAYS_FAILING;
   }
 }

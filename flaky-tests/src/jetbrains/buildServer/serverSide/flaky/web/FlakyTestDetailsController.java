@@ -73,9 +73,9 @@ public class FlakyTestDetailsController extends BaseController {
     }
 
     TestAnalysisResult result = myHolder.getTestAnalysisResult(project);
-    TestData testData = result.findFlakyTest(longTestNameId);
+    TestData testData = result.findTest(longTestNameId);
     if (testData == null) {
-      testData = myTestsAnalyser.getTestData(longTestNameId, project);
+      testData = myTestsAnalyser.getTestData(longTestNameId, project, result);
     }
     TestWebDetails testWebDetails = new TestWebDetails(myServer, myProjectManager,
                                                        myBuildAgentManager, testData);
