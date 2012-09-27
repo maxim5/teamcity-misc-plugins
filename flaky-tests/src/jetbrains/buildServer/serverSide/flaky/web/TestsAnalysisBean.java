@@ -7,7 +7,6 @@ package jetbrains.buildServer.serverSide.flaky.web;
 import java.util.*;
 import jetbrains.buildServer.controllers.investigate.DummyTestRunImpl;
 import jetbrains.buildServer.messages.Status;
-import jetbrains.buildServer.responsibility.InvestigationTestRunsHolder;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.flaky.data.*;
 import jetbrains.buildServer.web.problems.GroupedTestsBean;
@@ -15,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * TODO: introduce bulk methods in {@link InvestigationTestRunsHolder} and {@link CurrentProblemsManager} to find test runs.
- *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */

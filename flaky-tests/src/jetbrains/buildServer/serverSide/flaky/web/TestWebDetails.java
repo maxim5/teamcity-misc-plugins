@@ -4,6 +4,7 @@
  */
 package jetbrains.buildServer.serverSide.flaky.web;
 
+import com.intellij.openapi.util.Pair;
 import java.util.*;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.flaky.analyser.BuildWithoutChangesReason;
@@ -14,8 +15,6 @@ import jetbrains.buildServer.serverSide.flaky.data.TestData;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * TODO: calculate total fail rate; small monitor: 100% width.
- *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
@@ -112,9 +111,14 @@ public class TestWebDetails {
     return myFailedOnAgents;
   }
 
-  //TODO
-  public long getBuildId() {
-    return myTestData.getFromBuildId();
+  public Pair<Integer, Integer> getStats() {
+    int totalRuns = 0;
+    int failures = 0;
+    for (FailureRate rate : myTestData.getBuildTypeFailureRates().values()) {
+      totalRuns += rate.getTotalRuns();
+      failures += rate.getFailures();
+    }
+    return new Pair<Integer, Integer>(totalRuns, failures);
   }
 
   public boolean isHasReason() {

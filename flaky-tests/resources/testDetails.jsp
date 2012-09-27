@@ -1,38 +1,46 @@
-<%@ include file="/include.jsp" %>
-<jsp:useBean id="testDetails" type="jetbrains.buildServer.serverSide.flaky.web.TestWebDetails" scope="request"
+<%@ include file="/include.jsp" %><%@
+    taglib prefix="bs" tagdir="/WEB-INF/tags"
+%><jsp:useBean id="testDetails" type="jetbrains.buildServer.serverSide.flaky.web.TestWebDetails" scope="request"
 
 /><div class="test-details">
-  <div>
-    [${testDetails.buildId}]
-  </div>
+  <c:if test="${testDetails.hasReason}">
+    <div class="reason">
+      <c:choose>
+        <c:when test="${testDetails.withoutChangesReason}">
+          <div>Diagnosis: test failed in a build without changes: <bs:buildLinkFull build="${testDetails.buildWithoutChanges}"/></div>
+        </c:when>
+        <c:when test="${testDetails.buildsOnSameModificationReason}">
+          <div>Diagnosis: test run differently in builds with same sources:</div>
 
-  <div>
-    <c:choose>
-      <c:when test="${not testDetails.hasReason}">
-      </c:when>
-      <c:when test="${testDetails.withoutChangesReason}">
-        Test failed in <bs:buildLinkFull build="${testDetails.buildWithoutChanges}"/>
-      </c:when>
-      <c:when test="${testDetails.buildsOnSameModificationReason}">
-        <div>Different test results in builds with same sources:</div>
+          <table class="modificationBuilds">
+            <c:set var="build" value="${testDetails.failedInBuild}"/>
+            <tr class="buildTypeProblem">
+              <td class="fail">Failed in:</td>
+              <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
+              <td class="build"><%@ include file="/changeBuild.jspf" %></td>
+            </tr>
 
-        <table class="modificationBuilds">
-          <c:set var="build" value="${testDetails.failedInBuild}"/>
-          <tr class="buildTypeProblem">
-            <td class="fail">Failed in:</td>
-            <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
-            <td class="build"><%@ include file="/changeBuild.jspf" %></td>
-          </tr>
+            <tr class="buildTypeProblem">
+              <c:set var="build" value="${testDetails.successfulInBuild}"/>
+              <td class="success">Successful in:</td>
+              <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
+              <td class="build"><%@ include file="/changeBuild.jspf" %></td>
+            </tr>
+          </table>
+        </c:when>
+      </c:choose>
+    </div>
+  </c:if>
 
-          <tr class="buildTypeProblem">
-            <c:set var="build" value="${testDetails.successfulInBuild}"/>
-            <td class="success">Successful in:</td>
-            <td class="bt"><bs:buildTypeLink buildType="${build.buildType}"/></td>
-            <td class="build"><%@ include file="/changeBuild.jspf" %></td>
-          </tr>
-        </table>
-      </c:when>
-    </c:choose>
+  <div class="stats">
+    <c:set var="stats" value="${testDetails.stats}"/>
+
+    Total test runs: <b>${stats.first}</b>, total failures: <b>${stats.second}</b>,
+    failure rate: <b><fmt:formatNumber value="${stats.first > 0 ? (stats.second / stats.first) * 100 : 0}"
+                                       minFractionDigits="1"
+                                       maxFractionDigits="1" />%</b>
+    <br>
+    Failure rates in different build configurations and agents:
   </div>
 
   <table>
