@@ -1,5 +1,5 @@
 BS.Flaky = {
-  start: function(link, projectId) {
+  start: function(projectId) {
     var progressIcon = $j("#startAnalysisProgress");
     progressIcon.show();
 
@@ -32,14 +32,84 @@ BS.Flaky = {
 BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
   show: function() {
     this.showCentered();
-    this.init();
+    this.initTabs();
+    this.initFields();
     return false;
   },
 
-  init: function() {
+  initTabs: function() {
+    $j("#dialog-tabs a").each(function() {
+      var link = $j(this);
+      var li = link.parent().parent();
+      var id = li.attr("id");
+      link.click(function() {
+        $j("#dialog-contents > div").hide();
+        $j("#" + id + "-content").show();
+        li.addClass("selected")
+          .siblings().removeClass("selected");
+        return false;
+      });
+    })
+  },
+
+  initFields: function() {
+    this._saveValues();
     $j("#analyseFullHistory").change(function() {
       var checked = $j(this).is(":checked");
       $j("#analyseTimePeriodDays").prop("disabled", checked);
+    });
+  },
+
+  validate: function() {
+    var period = $j("#analyseTimePeriodDays").val();
+    if (!this._isInteger(period)) {
+      alert("Incorrect time period value");
+      return false;
+    }
+    return true;
+  },
+
+  cancel: function() {
+    this._restoreValues();
+    this.doClose();
+    return false;
+  },
+
+  start: function(projectId) {
+    if (this.validate()) {
+      BS.Flaky.start(projectId);
+      this.doClose();
+    }
+    return false;
+  },
+
+  _isInteger: function(value) {
+    return (parseFloat(value) == parseInt(value)) && !isNaN(value);
+  },
+
+  _saveValues: function() {
+    if (this._values) return;
+
+    var values = this._values = {};
+    $j("#dialog-contents").find("input[type=text], select").each(function() {
+      var self = $j(this);
+      values[self.attr("id")] = self.val();
+    });
+    $j("#dialog-contents").find("input[type=checkbox]").each(function() {
+      var self = $j(this);
+      values[self.attr("id")] = self.prop("checked");
+    });
+  },
+
+  _restoreValues: function() {
+    var values = this._values;
+    $j("#dialog-contents").find("input[type=text], select").each(function() {
+      var self = $j(this);
+      self.val(values[self.attr("id")]).trigger("change");
+    });
+    $j("#dialog-contents").find("input[type=checkbox]").each(function() {
+      var self = $j(this);
+      self.prop("checked", values[self.attr("id")]).trigger("change");
     });
   },
 
@@ -50,23 +120,6 @@ BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
   formElement: function() {
     return $('settingsForm');
   },
-
-  close: function() {
-    this.validate();
-    this.doClose();
-    return false;
-  },
-
-  validate: function() {
-    var period = $j("#analyseTimePeriodDays").val();
-    if (!this.isInt(period)) {
-      $j("#analyseTimePeriodDays").val(-1);    // TODO: alert
-    }
-  },
-
-  isInt: function(value){
-    return (parseFloat(value) == parseInt(value)) && !isNaN(value);
-  }
 });
 
 BS.TestDetails._toggleDetails = BS.TestDetails.toggleDetails;

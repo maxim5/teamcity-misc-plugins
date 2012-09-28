@@ -23,7 +23,7 @@
         </c:when>
         <c:otherwise>
           No tests were analyzed yet.
-          <jsp:include page="startAnalysis.jsp"/>
+          <jsp:include page="startButton.jsp"/>
         </c:otherwise>
       </c:choose>
     </c:when>
@@ -91,5 +91,5 @@
     </c:when>
   </c:choose>
 
-  <jsp:include page="settingsDialog.jsp"/>
+  <jsp:include page="customSettingsDialog.jsp"/>
 </bs:refreshable>
