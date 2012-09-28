@@ -25,7 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
-public class FlakyTestDetailsController extends BaseController {
+public class ShowTestDetailsController extends BaseController {
   private final String JSP_PATH;
 
   private final ProjectManager myProjectManager;
@@ -33,13 +33,13 @@ public class FlakyTestDetailsController extends BaseController {
   private final TestAnalysisResultHolder myHolder;
   private final TestsAnalyser myTestsAnalyser;
 
-  public FlakyTestDetailsController(@NotNull SBuildServer server,
-                                    @NotNull WebControllerManager webControllerManager,
-                                    @NotNull PluginDescriptor descriptor,
-                                    @NotNull ProjectManager projectManager,
-                                    @NotNull BuildAgentManager buildAgentManager,
-                                    @NotNull TestAnalysisResultHolder holder,
-                                    @NotNull TestsAnalyser testsAnalyser) {
+  public ShowTestDetailsController(@NotNull SBuildServer server,
+                                   @NotNull WebControllerManager webControllerManager,
+                                   @NotNull PluginDescriptor descriptor,
+                                   @NotNull ProjectManager projectManager,
+                                   @NotNull BuildAgentManager buildAgentManager,
+                                   @NotNull TestAnalysisResultHolder holder,
+                                   @NotNull TestsAnalyser testsAnalyser) {
     super(server);
     webControllerManager.registerController("/flakyTestDetails.html", this);
     JSP_PATH = descriptor.getPluginResourcesPath("/testDetails.jsp");
@@ -74,7 +74,7 @@ public class FlakyTestDetailsController extends BaseController {
 
     TestAnalysisResult result = myHolder.getTestAnalysisResult(project);
     TestData testData = result.findTest(longTestNameId);
-    if (testData == null) {
+    if (testData == null || !testData.wasProcessed()) {
       testData = myTestsAnalyser.getTestData(longTestNameId, project, result);
     }
     TestWebDetails testWebDetails = new TestWebDetails(myServer, myProjectManager,

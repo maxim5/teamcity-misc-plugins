@@ -17,6 +17,8 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class TestData implements Serializable {
+  private static final long NO_BUILD_ID = -1;
+
   private final long myTestId;
   private final String myProjectId;
   private final Map<String, FailureRate> myBuildTypeFailureRates;
@@ -45,7 +47,7 @@ public class TestData implements Serializable {
     this(testId, projectId,
          Collections.<String, FailureRate>emptyMap(),
          Collections.<String, FailureRate>emptyMap(),
-         0, null, null);
+         NO_BUILD_ID, null, null);
   }
 
   public TestData(@NotNull STest test) {
@@ -57,7 +59,7 @@ public class TestData implements Serializable {
                   @NotNull Map<String, FailureRate> agentFailureRates) {
     this(test.getTestNameId(), test.getProjectId(),
          buildTypeFailureRates, agentFailureRates,
-         0, null, null);
+         NO_BUILD_ID, null, null);
   }
 
   public long getTestId() {
@@ -81,6 +83,10 @@ public class TestData implements Serializable {
 
   public long getFromBuildId() {
     return myFromBuildId;
+  }
+
+  public boolean wasProcessed() {
+    return myFromBuildId != NO_BUILD_ID;
   }
 
   @NotNull
