@@ -70,11 +70,12 @@ public class RunTestsAnalysisController extends BaseController {
                                        StringUtil.split(excludeBuildTypesParam, true, ':') :
                                        Collections.<String>emptyList();
 
-    String periodParam = request.getParameter("period");
-    long analyseTimePeriod = -1;
-    if (periodParam != null) {
+    boolean analyseFullHistory = "true".equals(request.getParameter("analyseFullHistory"));
+    String analyseTimePeriodDaysParam = request.getParameter("analyseTimePeriodDays");
+    int analyseTimePeriodDays = TestAnalysisSettings.DEFAULT_PERIOD_DAYS;
+    if (analyseTimePeriodDaysParam != null) {
       try {
-        analyseTimePeriod = Long.parseLong(periodParam);
+        analyseTimePeriodDays = Integer.parseInt(analyseTimePeriodDaysParam);
       } catch (NumberFormatException e) {
         // ignore
       }
@@ -82,6 +83,7 @@ public class RunTestsAnalysisController extends BaseController {
 
     boolean speedUpAlwaysFailing = "true".equals(request.getParameter("speedUpAlwaysFailing"));
 
-    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriod, speedUpAlwaysFailing);
+    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriodDays,
+                                    analyseFullHistory, speedUpAlwaysFailing);
   }
 }

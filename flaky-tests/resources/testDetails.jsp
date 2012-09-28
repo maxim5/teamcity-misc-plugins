@@ -30,7 +30,7 @@
         </c:when>
         <c:when test="${testDetails.suspiciousStatisticsReason}">
           <c:set var="suspiciousStats" value="${testDetails.suspiciousStatistics}"/>
-          <div>Diagnosis: test had <b>${suspiciousStats.second}</b> failure series with average length of
+          <div>Diagnosis: test had <b>${suspiciousStats.second}</b> series of consecutive failures with average length of
                <b><fmt:formatNumber value="${suspiciousStats.first / suspiciousStats.second}"
                                     minFractionDigits="1"
                                     maxFractionDigits="1" /></b> builds</div>

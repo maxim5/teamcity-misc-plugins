@@ -20,10 +20,7 @@ public class StatisticAnalysisAlgorithm implements CheckAlgorithm {
   private final int myMinSeriesNum = 2;
   private final double myAvgSeriesLegth = 2; //1.34;
 
-  public void onStart(@NotNull TestAnalysisSettings settings) {
-  }
-
-  public void onFinish() {
+  public StatisticAnalysisAlgorithm(@NotNull TestAnalysisSettings settings) {
   }
 
   @Nullable

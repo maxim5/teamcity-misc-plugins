@@ -14,20 +14,24 @@ import org.jetbrains.annotations.NotNull;
  * @since 8.0
  */
 public class TestAnalysisSettings implements Serializable {
-  public static final int DEFAULT_PERIOD = 5 * 24 * 60 * 60 * 1000;
+  public static final int DEFAULT_PERIOD_DAYS = 5;
   public static final TestAnalysisSettings DEFAULT_SETTINGS =
-    new TestAnalysisSettings(Collections.<String>emptyList(), DEFAULT_PERIOD, true);
+    new TestAnalysisSettings(Collections.<String>emptyList(), DEFAULT_PERIOD_DAYS, true, false);
+  private static final long DAY = 24 * 60 * 60 * 1000;
 
   private final Collection<String> myExcludeBuildTypes;
-  private final long myAnalyseTimePeriod;
-  private final boolean myUseEuristicToFilterAlwaysFailingTests;
+  private final int myAnalyseTimePeriodDays;
+  private final boolean myAnalyseFullHistory;
+  private final boolean mySpeedUpAlwaysFailing;
 
   public TestAnalysisSettings(@NotNull Collection<String> excludeBuildTypes,
-                              long analyseTimePeriod,
-                              boolean useEuristicToFilterAlwaysFailingTests) {
+                              int analyseTimePeriodDays,
+                              boolean analyseFullHistory,
+                              boolean speedUpAlwaysFailing) {
     myExcludeBuildTypes = excludeBuildTypes;
-    myAnalyseTimePeriod = analyseTimePeriod;
-    myUseEuristicToFilterAlwaysFailingTests = useEuristicToFilterAlwaysFailingTests;
+    myAnalyseTimePeriodDays = analyseTimePeriodDays;
+    myAnalyseFullHistory = analyseFullHistory;
+    mySpeedUpAlwaysFailing = speedUpAlwaysFailing;
   }
 
   @NotNull
@@ -35,11 +39,29 @@ public class TestAnalysisSettings implements Serializable {
     return myExcludeBuildTypes;
   }
 
-  public long getAnalyseTimePeriod() {
-    return myAnalyseTimePeriod;
+  public int getAnalyseTimePeriodDays() {
+    return myAnalyseTimePeriodDays;
   }
 
-  public boolean isUseEuristicToFilterAlwaysFailingTests() {
-    return myUseEuristicToFilterAlwaysFailingTests;
+  public boolean isAnalyseFullHistory() {
+    return myAnalyseFullHistory;
+  }
+
+  public long getAnalyseTimePeriod() {
+    return myAnalyseFullHistory ? -1 : DAY * myAnalyseTimePeriodDays;
+  }
+
+  public boolean isSpeedUpAlwaysFailing() {
+    return mySpeedUpAlwaysFailing;
+  }
+
+  @Override
+  public String toString() {
+    return "TestAnalysisSettings{" +
+           "excludeBuildTypes=" + myExcludeBuildTypes +
+           ", analyseTimePeriodDays=" + myAnalyseTimePeriodDays +
+           ", analyseFullHistory=" + myAnalyseFullHistory +
+           ", speedUpAlwaysFailing=" + mySpeedUpAlwaysFailing +
+           '}';
   }
 }

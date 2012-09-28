@@ -5,8 +5,9 @@ BS.Flaky = {
 
     var parameters = {
       projectId: projectId,
-      excludeBuildTypes: ($j("#buildTypes").val() || []).join(":"),
-      period: $j("#period").val(),
+      excludeBuildTypes: ($j("#excludeBuildTypes").val() || []).join(":"),
+      analyseTimePeriodDays: $j("#analyseTimePeriodDays").val(),
+      analyseFullHistory: $j("#analyseFullHistory").is(":checked"),
       speedUpAlwaysFailing: $j("#speedUpAlwaysFailing").is(":checked")
     };
 
@@ -31,7 +32,15 @@ BS.Flaky = {
 BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
   show: function() {
     this.showCentered();
+    this.init();
     return false;
+  },
+
+  init: function() {
+    $j("#analyseFullHistory").change(function() {
+      var checked = $j(this).is(":checked");
+      $j("#analyseTimePeriodDays").prop("disabled", checked);
+    });
   },
 
   getContainer: function() {
@@ -49,9 +58,9 @@ BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
   },
 
   validate: function() {
-    var period = $j("#period").val();
+    var period = $j("#analyseTimePeriodDays").val();
     if (!this.isInt(period)) {
-      $j("#period").val(-1);
+      $j("#analyseTimePeriodDays").val(-1);    // TODO: alert
     }
   },
 

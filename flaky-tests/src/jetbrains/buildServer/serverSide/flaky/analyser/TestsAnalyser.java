@@ -8,7 +8,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import jetbrains.buildServer.messages.Status;
-import jetbrains.buildServer.serverSide.*;
+import jetbrains.buildServer.serverSide.SBuildType;
+import jetbrains.buildServer.serverSide.SProject;
+import jetbrains.buildServer.serverSide.SQLRunner;
+import jetbrains.buildServer.serverSide.STest;
 import jetbrains.buildServer.serverSide.db.DBAction;
 import jetbrains.buildServer.serverSide.db.DBException;
 import jetbrains.buildServer.serverSide.db.DBFunctions;
@@ -34,25 +37,21 @@ public class TestsAnalyser {
 
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
-  private final List<CheckAlgorithm> myAlgorithms;
 
+  private final AlgorithmsHolder myAlgorithmsHolder;
   private final TestAnalysisProgressManager myProgressManager;
   private final TestAnalysisResultHolder myHolder;
 
-  public TestsAnalyser(@NotNull SBuildServer buildServer,
-                       @NotNull TestFailuresStatistics failuresStatistics,
+  public TestsAnalyser(@NotNull TestFailuresStatistics failuresStatistics,
                        @NotNull SQLRunner sqlRunner,
+                       @NotNull AlgorithmsHolder algorithmsHolder,
                        @NotNull TestAnalysisProgressManager progressManager,
                        @NotNull TestAnalysisResultHolder holder) {
     myFailuresStatistics = failuresStatistics;
     mySQLRunner = sqlRunner;
+    myAlgorithmsHolder = algorithmsHolder;
     myProgressManager = progressManager;
     myHolder = holder;
-
-    myAlgorithms = new ArrayList<CheckAlgorithm>();
-    myAlgorithms.add(new SimpleStatusAlgorithm());
-    myAlgorithms.add(new ModificationBasedAlgorithm(buildServer));
-    myAlgorithms.add(new StatisticAnalysisAlgorithm());               // TODO: concurrency bug (AlgorithmHolder)
   }
 
   public void analyseTestsInProject(@NotNull SProject project,
@@ -72,7 +71,7 @@ public class TestsAnalyser {
       progress.setCurrentStep("Preparing data...");
       SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
       List<TestData> testDataList = new ArrayList<TestData>();
-      algorithmsOnStart(settings);
+      List<CheckAlgorithm> algorithms = myAlgorithmsHolder.getAlgorithms(settings);
 
       try {
         List<RawData> buffer = new ArrayList<RawData>(BUFFER_SIZE);    // reuse the allocated buffer
@@ -95,11 +94,12 @@ public class TestsAnalyser {
           int successCount = testFailureRate.getSuccessCount();
           int totalCount = failureCount + successCount;
 
-          if (settings.isUseEuristicToFilterAlwaysFailingTests() &&
+          if (settings.isSpeedUpAlwaysFailing() &&
               failureCount >= EURISTIC_MIN_FAILURES_NUMBER && successCount == 0) {
             testDataList.add(new TestData(test));
           } else if (totalCount > MIN_RUNS_NUMBER) {
-            TestData testData = getTestData(test, buildId, buildTypeIds, rawDataPool, buffer);
+            TestData testData = getTestData(test, buildId, algorithms,
+                                            buildTypeIds, rawDataPool, buffer);
             if (testData != null) {
               testDataList.add(testData);
             }
@@ -109,7 +109,6 @@ public class TestsAnalyser {
       } finally {
         // Finishing...
         progress.setCurrentStep("Finishing...");
-        algorithmsOnFinish();
         result.setFinishDate(new Date());
         result.setTests(testDataList);
         result.setSettings(settings);
@@ -137,18 +136,18 @@ public class TestsAnalyser {
   @Nullable
   private TestData getTestData(@NotNull STest test,
                                long buildId,
+                               @NotNull List<CheckAlgorithm> algorithms,
                                @NotNull final Set<String> buildTypeIds,
                                @NotNull final SimpleObjectPool<RawData> rawDataPool,
                                @NotNull final List<RawData> buffer) {
     buffer.clear();
-
     collectRawData(test.getTestNameId(), buildId, buildTypeIds, rawDataPool, buffer);
 
     if (buffer.size() <= 1) {
       // Not enough data to analyze.
       return null;
     }
-    return runAlgorithms(test, buildId, buffer);
+    return runAlgorithms(algorithms, test, buildId, buffer);
   }
 
   private void collectRawData(final long testId,
@@ -189,27 +188,18 @@ public class TestsAnalyser {
     });
   }
 
-  private void algorithmsOnStart(@NotNull TestAnalysisSettings settings) {
-    for (CheckAlgorithm algorithm : myAlgorithms) {
-      algorithm.onStart(settings);
-    }
-  }
-
   @Nullable
-  private TestData runAlgorithms(@NotNull STest test, long buildId, @NotNull List<RawData> data) {
-    for (CheckAlgorithm algorithm : myAlgorithms) {
+  private TestData runAlgorithms(@NotNull List<CheckAlgorithm> algorithms,
+                                 @NotNull STest test,
+                                 long buildId,
+                                 @NotNull List<RawData> data) {
+    for (CheckAlgorithm algorithm : algorithms) {
       CheckResult checkResult = algorithm.checkTest(test, data);
       if (checkResult != null && !checkResult.getType().isOrdinary()) {
         return buildTestData(test.getTestNameId(), test.getProjectId(), buildId, checkResult, data);
       }
     }
     return null;    // we're not sure about this test.
-  }
-
-  private void algorithmsOnFinish() {
-    for (CheckAlgorithm algorithm : myAlgorithms) {
-      algorithm.onFinish();
-    }
   }
 
   @NotNull
