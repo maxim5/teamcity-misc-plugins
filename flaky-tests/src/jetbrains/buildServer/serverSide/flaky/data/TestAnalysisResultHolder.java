@@ -11,8 +11,6 @@ import net.sf.ehcache.Element;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * TODO: why cache expires after the restart
- *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
@@ -41,11 +39,23 @@ public class TestAnalysisResultHolder {
 
   @NotNull
   private TestAnalysisResult getFromCache(@NotNull SProject project) {
-    Element element = myCache.getQuiet(project.getProjectId());
-    if (element != null) {
-      //noinspection unchecked
-      return (TestAnalysisResult) element.getValue();
+    // A familiar problem: see AbstractIssueFetcher.
+    // EhCache uses 'Thread.currentThread().getContextClassLoader()' to load classes of serialized
+    // instances, which is not the same as 'getClass().getClassLoader()'. This causes a problem
+    // for plugin classes derived from IssueData.
+
+    ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+
+    try {
+      Element element = myCache.getQuiet(project.getProjectId());
+      if (element != null) {
+        //noinspection unchecked
+        return (TestAnalysisResult) element.getValue();
+      }
+      return TestAnalysisResult.EMPTY_FLAKY_TESTS;
+    } finally {
+      Thread.currentThread().setContextClassLoader(currentLoader);
     }
-    return TestAnalysisResult.EMPTY_FLAKY_TESTS;
   }
 }

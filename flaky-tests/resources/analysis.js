@@ -25,7 +25,7 @@ BS.Flaky = {
   scheduleReload: function() {
     setTimeout(function() {
       $("flaky").refresh();
-    }, 3000);
+    }, 2000);
   }
 };
 
