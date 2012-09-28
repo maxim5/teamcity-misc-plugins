@@ -9,6 +9,8 @@
     <c:when test="${bean.inProgress}">
       <forms:progressRing className="progressRingInline"/> ${bean.progress.currentStep}
       <c:if test="${bean.progress.totalSize > 0}">
+        <b><fmt:formatNumber value="${(bean.progress.doneSize / bean.progress.totalSize) * 100}"
+                             maxFractionDigits="0" />%</b> done
         (${bean.progress.doneSize} of ${bean.progress.totalSize})
       </c:if>
       <script type="text/javascript">

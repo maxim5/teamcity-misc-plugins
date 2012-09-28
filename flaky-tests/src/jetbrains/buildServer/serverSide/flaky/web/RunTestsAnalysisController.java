@@ -20,6 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 
+import static jetbrains.buildServer.serverSide.flaky.analyser.StatisticAnalysisAlgorithm.DEFAULT_AVERAGE_SERIES_LENGTH;
+import static jetbrains.buildServer.serverSide.flaky.analyser.StatisticAnalysisAlgorithm.DEFAULT_MIN_SERIES_NUMBER;
+import static jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings.DEFAULT_PERIOD_DAYS;
+
 /**
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
@@ -65,25 +69,48 @@ public class RunTestsAnalysisController extends BaseController {
 
   @NotNull
   private static TestAnalysisSettings getSettingsFromRequest(@NotNull HttpServletRequest request) {
-    String excludeBuildTypesParam = request.getParameter("excludeBuildTypes");
-    List<String> excludeBuildTypes = (excludeBuildTypesParam != null) ?
-                                       StringUtil.split(excludeBuildTypesParam, true, ':') :
-                                       Collections.<String>emptyList();
+    List<String> excludeBuildTypes = getListParam(request, "excludeBuildTypes", ':');
+    boolean analyseFullHistory = getBoolParam(request, "analyseFullHistory");
+    int analyseTimePeriodDays = getIntParam(request, "analyseTimePeriodDays", DEFAULT_PERIOD_DAYS);
+    boolean speedUpAlwaysFailing = getBoolParam(request, "speedUpAlwaysFailing");
+    int minSeriesNumber = getIntParam(request, "minSeriesNumber", DEFAULT_MIN_SERIES_NUMBER);
+    double averageSeriesLength = getDoubleParam(request, "averageSeriesLength", DEFAULT_AVERAGE_SERIES_LENGTH);
+    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriodDays,
+                                    analyseFullHistory, speedUpAlwaysFailing,
+                                    minSeriesNumber, averageSeriesLength);
+  }
 
-    boolean analyseFullHistory = "true".equals(request.getParameter("analyseFullHistory"));
-    String analyseTimePeriodDaysParam = request.getParameter("analyseTimePeriodDays");
-    int analyseTimePeriodDays = TestAnalysisSettings.DEFAULT_PERIOD_DAYS;
-    if (analyseTimePeriodDaysParam != null) {
+  @NotNull
+  private static List<String> getListParam(@NotNull HttpServletRequest request, @NotNull String name, char separator) {
+    String param = request.getParameter(name);
+    return (param != null) ? StringUtil.split(param, true, separator) : Collections.<String>emptyList();
+  }
+
+  private static boolean getBoolParam(@NotNull HttpServletRequest request, @NotNull String name) {
+    return "true".equals(request.getParameter(name));
+  }
+
+  private static int getIntParam(@NotNull HttpServletRequest request, @NotNull String name, int defaultValue) {
+    String param = request.getParameter(name);
+    if (param != null) {
       try {
-        analyseTimePeriodDays = Integer.parseInt(analyseTimePeriodDaysParam);
+        return Integer.parseInt(param);
       } catch (NumberFormatException e) {
         // ignore
       }
     }
+    return defaultValue;
+  }
 
-    boolean speedUpAlwaysFailing = "true".equals(request.getParameter("speedUpAlwaysFailing"));
-
-    return new TestAnalysisSettings(excludeBuildTypes, analyseTimePeriodDays,
-                                    analyseFullHistory, speedUpAlwaysFailing);
+  private static double getDoubleParam(@NotNull HttpServletRequest request, @NotNull String name, double defaultValue) {
+    String param = request.getParameter(name);
+    if (param != null) {
+      try {
+        return Double.parseDouble(param);
+      } catch (NumberFormatException e) {
+        // ignore
+      }
+    }
+    return defaultValue;
   }
 }

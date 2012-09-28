@@ -54,10 +54,37 @@
     </div>
 
     <div id="tab-2-content" style="display: none;">
-      <forms:checkbox name="speedUpAlwaysFailing" checked="${settings.speedUpAlwaysFailing}"/>
-      <label for="speedUpAlwaysFailing">Speed up processing of tests with 100% failure rate</label>
+      <div style="margin-bottom: 1em;">
+        <forms:checkbox name="speedUpAlwaysFailing" checked="${settings.speedUpAlwaysFailing}"/>
+        <label for="speedUpAlwaysFailing">Speed up processing of tests with 100% failure rate</label>
 
-      <div class="grayNote">Checking this option may produce inaccurate results</div>
+        <div class="grayNote">Checking this option may produce inaccurate results, but work significantly faster</div>
+      </div>
+
+      <div>
+        <table>
+          <tr>
+            <td class="head">
+              <label for="minSeriesNumber">Minimum series number:</label>
+            </td>
+            <td>
+              <forms:textField name="minSeriesNumber" value="${settings.minSeriesNumber}"/>
+            </td>
+          </tr>
+          <tr>
+            <td class="head">
+              <label for="averageSeriesLength">Maximum average series length:</label>
+            </td>
+            <td>
+              <forms:textField name="averageSeriesLength" value="${settings.averageSeriesLength}"/>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="grayNote">
+        The values are used to determine tests that fail suspiciously too often.
+        The <i>series</i> means a collection of consecutive test failures.
+      </div>
     </div>
   </div>
 
