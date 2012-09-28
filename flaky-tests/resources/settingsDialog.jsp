@@ -18,7 +18,7 @@
       <td>
         <div class="grayNote">Selected build configurations will not be used in analysis:</div>
 
-        <select id="buildTypes" multiple="multiple">
+        <select id="excludeBuildTypes" multiple="multiple">
           <c:forEach items="${bean.buildTypeSettings}" var="entry">
             <forms:option value="${entry.key.buildTypeId}" selected="${entry.value}">
               <c:out value="${entry.key.name}"/>
@@ -38,10 +38,17 @@
         <table>
           <tr>
             <td class="head">
-              <label for="period">Time period:</label>
+              <label for="analyseTimePeriodDays">Time period in days:</label>
             </td>
             <td>
-              <input type="text" id="period" value="${settings.analyseTimePeriod}"/>
+              <forms:textField name="analyseTimePeriodDays" value="${settings.analyseTimePeriodDays}"
+                               disabled="${settings.analyseFullHistory}"/>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <forms:checkbox name="analyseFullHistory" checked="${settings.analyseFullHistory}"/>
+              <label for="analyseFullHistory">Analyse full history</label>
             </td>
           </tr>
         </table>
@@ -53,7 +60,7 @@
     </tr>
     <tr>
       <td>
-        <forms:checkbox name="speedUpAlwaysFailing" checked="${settings.useEuristicToFilterAlwaysFailingTests}"/>
+        <forms:checkbox name="speedUpAlwaysFailing" checked="${settings.speedUpAlwaysFailing}"/>
         <label for="speedUpAlwaysFailing">Speed up processing tests with 100% failure rate</label>
 
         <div class="grayNote">May produce inaccurate results</div>

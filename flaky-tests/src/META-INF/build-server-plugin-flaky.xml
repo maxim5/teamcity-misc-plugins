@@ -5,6 +5,7 @@
 <beans default-autowire="constructor">
   <bean class="jetbrains.buildServer.serverSide.flaky.data.TestAnalysisResultHolder"/>
   <bean class="jetbrains.buildServer.serverSide.flaky.data.TestAnalysisProgressManager"/>
+  <bean class="jetbrains.buildServer.serverSide.flaky.analyser.AlgorithmsHolder"/>
   <bean class="jetbrains.buildServer.serverSide.flaky.analyser.TestsAnalyser"/>
   <bean class="jetbrains.buildServer.serverSide.flaky.web.TestsAnalysisTab"/>
   <bean class="jetbrains.buildServer.serverSide.flaky.web.RunTestsAnalysisController"/>

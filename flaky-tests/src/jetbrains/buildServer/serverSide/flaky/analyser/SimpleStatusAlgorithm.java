@@ -7,7 +7,6 @@ package jetbrains.buildServer.serverSide.flaky.analyser;
 import java.util.List;
 import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.serverSide.STest;
-import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,14 +15,6 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class SimpleStatusAlgorithm implements CheckAlgorithm {
-  public void onStart(@NotNull TestAnalysisSettings settings) {
-    // Do nothing.
-  }
-
-  public void onFinish() {
-    // Do nothing.
-  }
-
   @Nullable
   public CheckResult checkTest(@NotNull STest test, @NotNull List<RawData> rawDataList) {
     int status = rawDataList.get(0).getStatus();
