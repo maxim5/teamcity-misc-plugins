@@ -22,7 +22,7 @@
           <jsp:include page="printResultShort.jsp"/>
         </c:when>
         <c:otherwise>
-          No tests were analyzed yet.
+          No tests were analyzed in this project so far.
           <jsp:include page="startButton.jsp"/>
         </c:otherwise>
       </c:choose>

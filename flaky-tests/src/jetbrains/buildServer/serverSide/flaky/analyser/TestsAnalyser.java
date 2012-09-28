@@ -35,6 +35,8 @@ public class TestsAnalyser {
   private static final int EURISTIC_MIN_FAILURES_NUMBER = 10;
   private static final int MIN_RUNS_NUMBER = 1;
 
+  private static final long NO_BUILDS_TO_ANALYSE = -1;
+
   private final TestFailuresStatistics myFailuresStatistics;
   private final SQLRunner mySQLRunner;
 
@@ -85,6 +87,9 @@ public class TestsAnalyser {
 
         // Calculating the start build...
         long buildId = findBuildIdForTest(null, settings.getAnalyseTimePeriod());
+        if (buildId == NO_BUILDS_TO_ANALYSE) {
+          return;
+        }
 
         // Analysis...
         progress.setCurrentStep("Analysing tests failures...");
@@ -129,6 +134,9 @@ public class TestsAnalyser {
     SimpleObjectPool<RawData> rawDataPool = getRawDataPool();
     long buildId = findBuildIdForTest(lastResult.getStartDate(),
                                       settings.getAnalyseTimePeriod());
+    if (buildId == NO_BUILDS_TO_ANALYSE) {
+      return new TestData(testId, project.getProjectId());
+    }
     collectRawData(testId, buildId, buildTypeIds, rawDataPool, buffer);
     return buildTestData(testId, project.getProjectId(), buildId, null, buffer);
   }
@@ -254,7 +262,7 @@ public class TestsAnalyser {
     }
     long timstamp = startDate.getTime() - period;
     return new GenericQuery<Long>(GET_FIRST_BUILD_ID_SQL,
-                                  new GenericQuery.ReturnSingle<Long>())       // TODO: NPE
+                                  new GenericQuery.ReturnSingle<Long>(NO_BUILDS_TO_ANALYSE))
            .execute(mySQLRunner, timstamp);
   }
 
