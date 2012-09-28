@@ -147,7 +147,7 @@
 }
 
 #dialog-contents {
-  height: 11em;
+  min-height: 11em;
   padding: 0.5em;
 }
 

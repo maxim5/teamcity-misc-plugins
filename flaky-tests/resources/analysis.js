@@ -8,7 +8,9 @@ BS.Flaky = {
       excludeBuildTypes: ($j("#excludeBuildTypes").val() || []).join(":"),
       analyseTimePeriodDays: $j("#analyseTimePeriodDays").val(),
       analyseFullHistory: $j("#analyseFullHistory").is(":checked"),
-      speedUpAlwaysFailing: $j("#speedUpAlwaysFailing").is(":checked")
+      speedUpAlwaysFailing: $j("#speedUpAlwaysFailing").is(":checked"),
+      minSeriesNumber: $j("#minSeriesNumber").val(),
+      averageSeriesLength: $j("#averageSeriesLength").val()
     };
 
     BS.ajaxRequest("analyzeTests.html", {
@@ -66,6 +68,31 @@ BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
       alert("Incorrect time period value");
       return false;
     }
+    if (!this._isPositive(period)) {
+      alert("Incorrect time period value: should be positive");
+      return false;
+    }
+
+    var seriesNum = $j("#minSeriesNumber").val();
+    if (!this._isInteger(seriesNum)) {
+      alert("Incorrect series number value");
+      return false;
+    }
+    if (!this._isPositive(seriesNum)) {
+      alert("Incorrect series number value: should be positive");
+      return false;
+    }
+
+    var seriesLength = $j("#averageSeriesLength").val();
+    if (!this._isFloat(seriesLength)) {
+      alert("Incorrect series length value");
+      return false;
+    }
+    if (!this._isPositive(seriesLength)) {
+      alert("Incorrect series length value: should be positive");
+      return false;
+    }
+
     return true;
   },
 
@@ -83,8 +110,17 @@ BS.Flaky.Dialog = OO.extend(BS.AbstractModalDialog, {
     return false;
   },
 
+  // http://stackoverflow.com/questions/1019515/javascript-test-for-an-integer
   _isInteger: function(value) {
     return (parseFloat(value) == parseInt(value)) && !isNaN(value);
+  },
+
+  _isPositive: function(value) {
+    return parseFloat(value) > 0;
+  },
+
+  _isFloat: function(value) {
+    return !isNaN(parseFloat(value));
   },
 
   _saveValues: function() {

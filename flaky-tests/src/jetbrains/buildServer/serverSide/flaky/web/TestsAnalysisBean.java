@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class TestsAnalysisBean {
   private final STestManager myTestManager;
+  private final ProjectManager myProjectManager;
 
   private final SProject myProject;
   private final TestAnalysisResult myTestAnalysisResult;
@@ -35,6 +36,7 @@ public class TestsAnalysisBean {
                            @NotNull TestAnalysisResultHolder holder,
                            @NotNull SProject project) {
     myTestManager = testManager;
+    myProjectManager = projectManager;
     myProgress = progress;
     myProject = project;
 
@@ -68,7 +70,17 @@ public class TestsAnalysisBean {
     assert startDate != null;
     assert finishDate != null;
     long duration = (finishDate.getTime() - startDate.getTime()) / 1000;
-    return duration + " seconds";
+
+    if (duration < 60) {
+      int seconds = (int)duration;
+      return seconds + " second" + (seconds != 1 ? "s" : "");
+    } else if (duration < 60 * 60) {
+      int minutes = (int)(duration / 60);
+      return minutes + " minute" + (minutes != 1 ? "s" : "");
+    } else {
+      int hours = (int)(duration / 3600);
+      return hours + " hour" + (hours != 1 ? "s" : "");
+    }
   }
 
   @NotNull
@@ -177,5 +189,14 @@ public class TestsAnalysisBean {
   @Nullable
   public TestAnalysisProgress getProgress() {
     return myProgress;
+  }
+
+  // Settings
+
+  public List<SBuildType> getExcludedBuildTypes() {
+    ArrayList<SBuildType> result = new ArrayList<SBuildType>();
+    result.addAll(myProjectManager.findBuildTypes(myTestAnalysisResult.getSettings().getExcludeBuildTypes()));
+    Collections.sort(result);
+    return result;
   }
 }

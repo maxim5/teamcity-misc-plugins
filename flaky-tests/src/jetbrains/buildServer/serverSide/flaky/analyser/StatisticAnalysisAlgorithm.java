@@ -17,10 +17,15 @@ import org.jetbrains.annotations.Nullable;
  * @since 8.0
  */
 public class StatisticAnalysisAlgorithm implements CheckAlgorithm {
-  private final int myMinSeriesNum = 2;
-  private final double myAvgSeriesLegth = 2; //1.34;
+  public static final int DEFAULT_MIN_SERIES_NUMBER = 2;
+  public static final double DEFAULT_AVERAGE_SERIES_LENGTH = 2.0;  // 1.34 is also good
+
+  private final int myMinSeriesNum;
+  private final double myAvgSeriesLength;
 
   public StatisticAnalysisAlgorithm(@NotNull TestAnalysisSettings settings) {
+    myMinSeriesNum = settings.getMinSeriesNumber();
+    myAvgSeriesLength = settings.getAverageSeriesLength();
   }
 
   @Nullable
@@ -57,7 +62,7 @@ public class StatisticAnalysisAlgorithm implements CheckAlgorithm {
     }
 
 
-    return (number >= myMinSeriesNum && totalLength < myAvgSeriesLegth * number) ?
+    return (number >= myMinSeriesNum && totalLength < myAvgSeriesLength * number) ?
              new CheckResult(Type.SUSPICIOUS, new SuspiciousFailureStatisticsReason(number, totalLength)) :
              null;
   }

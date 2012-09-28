@@ -7,6 +7,7 @@ package jetbrains.buildServer.serverSide.flaky.data;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import jetbrains.buildServer.serverSide.flaky.analyser.StatisticAnalysisAlgorithm;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,7 +17,11 @@ import org.jetbrains.annotations.NotNull;
 public class TestAnalysisSettings implements Serializable {
   public static final int DEFAULT_PERIOD_DAYS = 5;
   public static final TestAnalysisSettings DEFAULT_SETTINGS =
-    new TestAnalysisSettings(Collections.<String>emptyList(), DEFAULT_PERIOD_DAYS, true, false);
+    new TestAnalysisSettings(Collections.<String>emptyList(),
+                             DEFAULT_PERIOD_DAYS,
+                             true, false,
+                             StatisticAnalysisAlgorithm.DEFAULT_MIN_SERIES_NUMBER,
+                             StatisticAnalysisAlgorithm.DEFAULT_AVERAGE_SERIES_LENGTH);
   private static final long DAY = 24 * 60 * 60 * 1000;
 
   private final Collection<String> myExcludeBuildTypes;
@@ -24,14 +29,21 @@ public class TestAnalysisSettings implements Serializable {
   private final boolean myAnalyseFullHistory;
   private final boolean mySpeedUpAlwaysFailing;
 
+  private final int myMinSeriesNumber;
+  private final double myAverageSeriesLength;
+
   public TestAnalysisSettings(@NotNull Collection<String> excludeBuildTypes,
                               int analyseTimePeriodDays,
                               boolean analyseFullHistory,
-                              boolean speedUpAlwaysFailing) {
+                              boolean speedUpAlwaysFailing,
+                              int minSeriesNumber,
+                              double averageSeriesLength) {
     myExcludeBuildTypes = excludeBuildTypes;
     myAnalyseTimePeriodDays = analyseTimePeriodDays;
     myAnalyseFullHistory = analyseFullHistory;
     mySpeedUpAlwaysFailing = speedUpAlwaysFailing;
+    myMinSeriesNumber = minSeriesNumber;
+    myAverageSeriesLength = averageSeriesLength;
   }
 
   @NotNull
@@ -55,13 +67,11 @@ public class TestAnalysisSettings implements Serializable {
     return mySpeedUpAlwaysFailing;
   }
 
-  @Override
-  public String toString() {
-    return "TestAnalysisSettings{" +
-           "excludeBuildTypes=" + myExcludeBuildTypes +
-           ", analyseTimePeriodDays=" + myAnalyseTimePeriodDays +
-           ", analyseFullHistory=" + myAnalyseFullHistory +
-           ", speedUpAlwaysFailing=" + mySpeedUpAlwaysFailing +
-           '}';
+  public int getMinSeriesNumber() {
+    return myMinSeriesNumber;
+  }
+
+  public double getAverageSeriesLength() {
+    return myAverageSeriesLength;
   }
 }
