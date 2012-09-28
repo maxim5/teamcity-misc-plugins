@@ -9,4 +9,4 @@
   ${testAnalysisResult.settings}
 </div>
 
-<jsp:include page="startAnalysis.jsp"/>
+<jsp:include page="startButton.jsp"/>

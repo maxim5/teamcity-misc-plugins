@@ -1,6 +1,6 @@
 /* Tests list */
 
-.testFailedInPart {
+#flaky .testFailedInPart {
   display: none;
 }
 
@@ -10,6 +10,16 @@
 
 .action-bar .env {
   padding-left: 0.8em;
+}
+
+/* Start button */
+
+#flaky .buttonWrapper {
+  width: 96px;
+}
+
+#flaky .buttonWrapper .btn_main {
+  width: 80px;
 }
 
 /* Test details */
@@ -121,23 +131,24 @@
 /* Settings dialog */
 
 #settingsFormDialog {
-  width: 35em;
+  width: 30em;
 }
 
-#settingsForm table {
+#dialog-contents table {
   width: 100%;
 }
 
-#settingsForm td {
+#dialog-contents td {
   vertical-align: top;
 }
 
-#settingsForm td.head {
-  width: 10em;
+#dialog-contents {
+  height: 11em;
+  padding: 0.5em;
 }
 
-#settingsForm table table td {
-  padding: 0;
+#dialog-contents td.head {
+  width: 10em;
 }
 
 #excludeBuildTypes {

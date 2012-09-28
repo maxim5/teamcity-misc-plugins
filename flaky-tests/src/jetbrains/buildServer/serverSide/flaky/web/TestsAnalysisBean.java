@@ -48,6 +48,11 @@ public class TestsAnalysisBean {
   }
 
   @NotNull
+  public SProject getProject() {
+    return myProject;
+  }
+
+  @NotNull
   public TestAnalysisResult getTestAnalysisResult() {
     return myTestAnalysisResult;
   }
