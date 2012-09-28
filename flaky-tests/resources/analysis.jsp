@@ -55,7 +55,7 @@
 
       <c:if test="${bean.hasSuspicious}">
         <c:set var="title">Suspicious tests: ${bean.suspiciousTestsSize}</c:set>
-        <bs:_collapsibleBlock title="${title}" id="suspiciousTestsBlock" collapsedByDefault="true">
+        <bs:_collapsibleBlock title="${title}" id="suspiciousTestsBlock">
           <tt:testGroupWithActions groupedTestsBean="${bean.suspiciousTests}"
                                    defaultOption="package"
                                    groupSelector="true"
