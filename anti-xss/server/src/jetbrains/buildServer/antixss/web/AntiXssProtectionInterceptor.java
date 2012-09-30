@@ -4,12 +4,6 @@
  */
 package jetbrains.buildServer.antixss.web;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import jetbrains.buildServer.antixss.AntiXssOptions;
 import jetbrains.buildServer.antixss.AntiXssProcessor;
 import jetbrains.buildServer.antixss.AntiXssUtil;
@@ -20,6 +14,13 @@ import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.web.util.SessionUser;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * See TW-21070.
@@ -58,8 +59,6 @@ public class AntiXssProtectionInterceptor extends HandlerInterceptorAdapter {
       policy = AntiXssOptions.getPolicyForGetRequests();
     } else if ("POST".equalsIgnoreCase(method)) {
       policy = AntiXssOptions.getPolicyForPostRequests();
-    } else if ("PUT".equalsIgnoreCase(method)) {
-      policy = AntiXssOptions.getPolicyForPutRequests();
     } else {
       policy = AntiXssOptions.getPolicyForOtherRequests();
     }
