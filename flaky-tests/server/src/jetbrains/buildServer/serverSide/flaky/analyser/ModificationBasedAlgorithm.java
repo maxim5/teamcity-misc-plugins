@@ -79,7 +79,7 @@ public class ModificationBasedAlgorithm implements CheckAlgorithm {
         Reason reason = null;
         long buildId = getMaxBuildInListWithHash(rawDataList, hash);
 
-        if (currentStatus == Status.FAILURE.getPriority() && isBuildWithoutChanges(buildId)) {
+        if (Status.getStatus(currentStatus).isFailed() && isBuildWithoutChanges(buildId)) {
           // The test has different results in build without changes.
           reason = new BuildWithoutChangesReason(buildId);
         } else {

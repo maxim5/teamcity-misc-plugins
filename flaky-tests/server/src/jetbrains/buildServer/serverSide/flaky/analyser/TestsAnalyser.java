@@ -224,7 +224,7 @@ public class TestsAnalyser {
       String buildTypeId = rawData.getBuildTypeId();
       String agentName = rawData.getAgentName();
       int status = rawData.getStatus();
-      boolean failure = status == Status.FAILURE.getPriority();
+      boolean failure = Status.getStatus(status).isFailed();
 
       failureRate = buildTypeFailureRates.get(buildTypeId);
       if (failureRate == null) {
