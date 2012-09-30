@@ -30,11 +30,6 @@ public class AntiXssOptions {
   }
 
   @NotNull
-  public static Policy getPolicyForPutRequests() {
-    return fromProperty("teamcity.anti-xss.web.put", Policy.REPORT_TO_LOG);
-  }
-
-  @NotNull
   public static Policy getPolicyForOtherRequests() {
     return fromProperty("teamcity.anti-xss.web.other", Policy.REPORT_TO_LOG);
   }
@@ -50,8 +45,8 @@ public class AntiXssOptions {
     switch (value) {
       case 0:  return Policy.ALLOW;
       case 1:  return Policy.REPORT_TO_LOG;
-      case 2:  return Policy.CREATE_SERVER_ERROR;
-      case 3:  return Policy.DENY;
+      case 2:  return Policy.DENY;
+      case 9:  return Policy.CREATE_SERVER_ERROR;
       default: return defaultPolicy;
     }
   }
