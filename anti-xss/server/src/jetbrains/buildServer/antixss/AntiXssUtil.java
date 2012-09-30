@@ -18,7 +18,18 @@ import java.util.regex.Pattern;
  * @since 8.0
  */
 public class AntiXssUtil {
-  private static final Pattern[] ourPatterns = new Pattern[]{
+  /**
+   * Detects a potential JavaScript injection in the string <code>s</code>,
+   * given that it may contain any user provided value.
+   *
+   * @param s a user provided string
+   * @return true if a potential JS injection is found in the input string.
+   */
+  public static boolean hasPotentialJsInjection(@NotNull String s) {
+    return findInjectionInHtmlCode(s) || findInjectionInJsCode(s);
+  }
+
+  private static final Pattern[] HTML_INJECTION_PATTERNS = new Pattern[] {
     // Script fragments
     // Pattern.compile("<script>(.*?)</script>", Pattern.CASE_INSENSITIVE),
     // src='...'
@@ -28,7 +39,7 @@ public class AntiXssUtil {
     Pattern.compile("</script>", Pattern.CASE_INSENSITIVE),
     Pattern.compile("<script(.*?)>", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
     // eval(...)
-    Pattern.compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+    // Pattern.compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
     // expression(...)
     // Pattern.compile("expression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
     // javascript:...
@@ -39,29 +50,62 @@ public class AntiXssUtil {
     Pattern.compile("onload(.*?)=", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL)
   };
 
-  // The pattern below catches these kinds of js injections:
+  // Catches the injections that exploit lack of HTML escaping, e.g.
   //
-  //   <script>foo('${param}');</script>
+  //   <span>User name: ${name}<span>
   //
-  // where ${param} is not properly escaped.
+  // The usual way to use this vulnerability is to inject "<script>" tag
+  // in the ${name}, but there are more tricky ways.
   //
-  // But unfortunately the pattern is too strong to be used as is.
-  //
-  //  Pattern.compile("['\"].*\\).*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL)
-  //
-
-  public static boolean hasPotentialJsInjection(@NotNull String s) {
-    // An assumption: a JS injection is possible only via HTML injection.
+  // See HTML_INJECTION_PATTERNS.
+  private static boolean findInjectionInHtmlCode(@NotNull String s) {
+    // An assumption: a JS injection is not possible here without HTML tags.
     if (s.indexOf('<') == -1) {
       return false;
     }
 
-    for (Pattern pattern: ourPatterns) {
+    for (Pattern pattern: HTML_INJECTION_PATTERNS) {
       if (pattern.matcher(s).find()) {
         return true;
       }
     }
 
     return false;
+  }
+
+  // Catches the injections that exploit lack of JS escaping, e.g.
+  //
+  //   <script>foo('${param}');</script>
+  //
+  // These injections are much harder to identify, because no HTML tags are required,
+  // the code is already inside a script block.
+  //
+  // The usual way is to pass the following char sequence
+  //
+  //   ');
+  //
+  // and start arbitrary code after that.
+  private static boolean findInjectionInJsCode(@NotNull String s) {
+    // An assumption: a JS injection is not possible here without closing parenthesis.
+    if (s.indexOf(')') == -1) {
+      return false;
+    }
+
+    int end = s.indexOf(')');
+    return count('\'', s, end) % 2 == 1 ||
+           count('\"', s, end) % 2 == 1;
+  }
+
+  private static int count(char quoteChar, String s, int end) {
+    int counter = 0;
+    for (int i = 0; i < end; ++i) {
+      char ch = s.charAt(i);
+      if (ch == '\\') {
+        ++i;  // skip this one and next too
+      } else if (ch == quoteChar) {
+        ++counter;
+      }
+    }
+    return counter;
   }
 }
