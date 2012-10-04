@@ -4,13 +4,16 @@
  */
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
-import java.util.ArrayList;
-import java.util.List;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.serverSide.flaky.data.TestAnalysisSettings;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
+ * Holds all test analysis algorithms.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */

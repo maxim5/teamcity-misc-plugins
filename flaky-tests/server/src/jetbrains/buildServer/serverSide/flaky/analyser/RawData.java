@@ -5,6 +5,8 @@
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
 /**
+ * Holds the raw test run data.
+ *
 * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
 * @since 8.0
 */

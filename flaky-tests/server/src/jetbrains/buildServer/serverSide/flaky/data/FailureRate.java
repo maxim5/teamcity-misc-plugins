@@ -7,6 +7,8 @@ package jetbrains.buildServer.serverSide.flaky.data;
 import java.io.Serializable;
 
 /**
+ * Represents the failure rate of one test (in a build type, on an agent, etc).
+ *
 * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
 * @since 8.0
 */

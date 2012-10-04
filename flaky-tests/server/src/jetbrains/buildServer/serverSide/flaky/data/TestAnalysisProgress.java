@@ -4,10 +4,13 @@
  */
 package jetbrains.buildServer.serverSide.flaky.data;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
+ * Holds the progress of test analysis process in one project.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */

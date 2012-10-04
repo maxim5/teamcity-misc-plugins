@@ -4,15 +4,18 @@
  */
 package jetbrains.buildServer.serverSide.flaky.data;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import jetbrains.buildServer.serverSide.STest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
 /**
+ * Represents the test analysis for a single test.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
