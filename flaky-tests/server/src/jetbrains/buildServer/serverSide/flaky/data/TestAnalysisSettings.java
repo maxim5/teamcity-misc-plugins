@@ -4,13 +4,16 @@
  */
 package jetbrains.buildServer.serverSide.flaky.data;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
 import jetbrains.buildServer.serverSide.flaky.analyser.StatisticAnalysisAlgorithm;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+
 /**
+ * Holds the settings for test analysis.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */

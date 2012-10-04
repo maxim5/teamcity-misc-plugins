@@ -11,10 +11,13 @@ import net.sf.ehcache.Element;
 import org.jetbrains.annotations.NotNull;
 
 /**
+ * Holds the test analysis results for all projects.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
 public class TestAnalysisResultHolder {
+  // A persistent cache: string (projectId) -> TestAnalysisResult.
   private final Cache myCache;
 
   public TestAnalysisResultHolder(@NotNull EhCacheUtil cacheUtil) {

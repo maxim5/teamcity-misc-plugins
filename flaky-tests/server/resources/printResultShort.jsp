@@ -19,7 +19,7 @@
   <c:if test="${settings.analyseFullHistory}">full tests history processed,</c:if>
   <c:if test="${not settings.analyseFullHistory}">tests history for last ${settings.analyseTimePeriodDays} days processed,</c:if>
 
-  magic numbers (euristics): <c:if test="${settings.speedUpAlwaysFailing}">fast processing of tests with 100% failure rate,</c:if>
+  magic numbers (heuristics): <c:if test="${settings.speedUpAlwaysFailing}">fast processing of tests with 100% failure rate,</c:if>
   minimum series number <b>${settings.minSeriesNumber}</b>, maximum average series length <b>${settings.averageSeriesLength}</b>.
 </div>
 

@@ -4,9 +4,6 @@
  */
 package jetbrains.buildServer.serverSide.flaky.analyser;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
 import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SProject;
@@ -24,7 +21,14 @@ import jetbrains.buildServer.util.SimpleObjectPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
 /**
+ * Represents the tests analyser.
+ * Responsible for fetching the raw data from the DB and running the algorithms.
+ *
  * @author Maxim Podkolzine (maxim.podkolzine@jetbrains.com)
  * @since 8.0
  */
@@ -32,7 +36,7 @@ public class TestsAnalyser {
   private static final int BUFFER_SIZE = 1024;
   private static final int POOL_SIZE = 1024;
   private static final float FAILURE_RATE = 0.01f;
-  private static final int EURISTIC_MIN_FAILURES_NUMBER = 10;
+  private static final int HEURISTIC_MIN_FAILURES_NUMBER = 10;
   private static final int MIN_RUNS_NUMBER = 1;
 
   private static final long NO_BUILDS_TO_ANALYSE = -1;
@@ -100,7 +104,7 @@ public class TestsAnalyser {
           int totalCount = failureCount + successCount;
 
           if (settings.isSpeedUpAlwaysFailing() &&
-              failureCount >= EURISTIC_MIN_FAILURES_NUMBER && successCount == 0) {
+              failureCount >= HEURISTIC_MIN_FAILURES_NUMBER && successCount == 0) {
             testDataList.add(new TestData(test));
           } else if (totalCount > MIN_RUNS_NUMBER) {
             TestData testData = getTestData(test, buildId, algorithms,
@@ -260,10 +264,10 @@ public class TestsAnalyser {
     if (startDate == null) {
       startDate = new Date();
     }
-    long timstamp = startDate.getTime() - period;
+    long timestamp = startDate.getTime() - period;
     return new GenericQuery<Long>(GET_FIRST_BUILD_ID_SQL,
                                   new GenericQuery.ReturnSingle<Long>(NO_BUILDS_TO_ANALYSE))
-           .execute(mySQLRunner, timstamp);
+           .execute(mySQLRunner, timestamp);
   }
 
   @NotNull
