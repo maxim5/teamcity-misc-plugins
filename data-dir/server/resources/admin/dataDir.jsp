@@ -14,3 +14,11 @@
     Browse TeamCity data directory:
   </jsp:attribute>
 </bs:fileBrowsePage>
+
+<script type="text/javascript">
+  $j("#tree").add(".fileOperations").on("click", "a", function() {
+    if (this.href != "#") {
+      this.href += window.location.hash;
+    }
+  });
+</script>
