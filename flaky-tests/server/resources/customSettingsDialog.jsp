@@ -12,7 +12,7 @@
     <ul class="tabs">
       <li class="first selected" id="tab-0"><p><a href="#">Build configurations filter</a></p></li>
       <li id="tab-1"><p><a href="#">Time period</a></p></li>
-      <li class="last" id="tab-2"><p><a href="#">Euristics</a></p></li>
+      <li class="last" id="tab-2"><p><a href="#">Heuristics</a></p></li>
     </ul>
   </div>
 
