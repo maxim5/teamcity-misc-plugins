@@ -35,7 +35,7 @@ public class AntiXssProtectionInterceptor extends HandlerInterceptorAdapter {
   public AntiXssProtectionInterceptor(@NotNull RequestInterceptors requestInterceptors,
                                       @NotNull AntiXssProcessor processor) {
     myProcessor = processor;
-    //requestInterceptors.addInterceptor(this);
+    requestInterceptors.addInterceptor(this);
   }
 
   @Override
